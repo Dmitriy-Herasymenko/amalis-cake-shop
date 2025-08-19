@@ -12,6 +12,40 @@ model Cake {
   name        String
   description String
   price       Float
-  imageUrl    String
   createdAt   DateTime @default(now())
+  imageUrl    String
 }
+
+model Admin {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  username  String?
+}
+
+model Order {
+  id         Int      @id @default(autoincrement())
+  name       String
+  phone      String
+  address    String
+  callBack   Boolean
+  payment    String
+  paid       Boolean  @default(false)
+  status     String   @default("NEW")
+  comment    String?
+  items      Json
+  totalPrice Float
+  isNew      Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+
+enum OrderStatus {
+  NEW
+  PROCESSING
+  DELIVERING
+  COMPLETED
+}
+
