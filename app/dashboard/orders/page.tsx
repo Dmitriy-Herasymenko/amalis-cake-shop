@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 type Order = {
   id: number;
+  orderNumber: number;
   name: string;
   phone: string;
   address: string;
@@ -52,7 +53,6 @@ export default function AdminOrdersPage() {
         body: JSON.stringify({ id, status: newStatus }),
       });
       if (!res.ok) throw new Error(await res.text());
-      // оновлюємо локально замість повторного fetch, щоб швидше відображалось
       setOrders((prev) =>
         prev.map((o) => (o.id === id ? { ...o, status: newStatus } : o))
       );
@@ -96,12 +96,14 @@ export default function AdminOrdersPage() {
           <thead className="bg-gray-100">
             <tr>
               <th className="p-2 text-left">ID</th>
+              <th className="p-2 text-left">Номер замовлення</th>
               <th className="p-2 text-left">Ім'я</th>
               <th className="p-2 text-left">Телефон</th>
               <th className="p-2 text-left">Адреса</th>
               <th className="p-2 text-left">Товари</th>
               <th className="p-2 text-left">Сума</th>
               <th className="p-2 text-left">Оплата</th>
+              <th className="p-2 text-left">Оплачено</th>
               <th className="p-2 text-left">Статус</th>
               <th className="p-2 text-left">Коментар</th>
               <th className="p-2 text-left">Дата</th>
@@ -111,6 +113,7 @@ export default function AdminOrdersPage() {
             {filteredOrders.map((order) => (
               <tr key={order.id} className="border-b hover:bg-gray-50">
                 <td className="p-2">{order.id}</td>
+                <td className="p-2">{order.orderNumber}</td>
                 <td className="p-2">{order.name}</td>
                 <td className="p-2">{order.phone}</td>
                 <td className="p-2">{order.address}</td>
@@ -122,9 +125,8 @@ export default function AdminOrdersPage() {
                   ))}
                 </td>
                 <td className="p-2">{order.totalPrice} грн</td>
-                <td className="p-2">
-                  {order.payment} {order.paid && "(оплачено)"}
-                </td>
+                <td className="p-2">{order.payment}</td>
+                <td className="p-2">{order.paid ? "Так" : "Ні"}</td>
                 <td className="p-2">
                   <select
                     value={order.status}

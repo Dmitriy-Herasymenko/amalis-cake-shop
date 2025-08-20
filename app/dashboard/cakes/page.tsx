@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 
 type CakeType = {
   id: number;
@@ -15,6 +16,8 @@ export default function CakesPage() {
   const [newCake, setNewCake] = useState({ name: "", description: "", price: "" });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [savingId, setSavingId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const fetchCakes = async () => {
     const res = await fetch("/api/cakes");
@@ -47,66 +50,68 @@ export default function CakesPage() {
   };
 
   const handleDelete = async (id: number) => {
+    setDeletingId(id);
     await fetch(`/api/cakes?id=${id}`, { method: "DELETE" });
     setCakes(cakes.filter(c => c.id !== id));
+    setDeletingId(null);
   };
 
   const handleSave = async (cake: CakeType) => {
+    setSavingId(cake.id);
     await fetch("/api/cakes", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(cake),
     });
     fetchCakes();
+    setSavingId(null);
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen font-sans">
-      <h1 className="text-4xl font-bold mb-6 text-pink-600">Адмінка тортів</h1>
+    <div className="p-2 min-h-screen font-sans">
 
       {/* Форма додавання */}
-      <div className="flex gap-3 mb-6 items-center">
+      <div className="flex gap-3 mb-6 items-center justify-center flex-wrap">
         <input
           type="text"
           placeholder="Назва"
           value={newCake.name}
           onChange={(e) => setNewCake({ ...newCake, name: e.target.value })}
-          className="border p-2 rounded flex-1 shadow-sm"
+          className="border p-1 rounded shadow-sm text-xs"
         />
         <input
           type="text"
           placeholder="Опис"
           value={newCake.description}
           onChange={(e) => setNewCake({ ...newCake, description: e.target.value })}
-          className="border p-2 rounded flex-2 shadow-sm"
+          className="border p-1 rounded shadow-sm text-xs"
         />
         <input
           type="number"
           placeholder="Ціна"
           value={newCake.price}
           onChange={(e) => setNewCake({ ...newCake, price: e.target.value })}
-          className="border p-2 rounded w-24 shadow-sm"
+          className="border p-1 rounded w-24 shadow-sm text-xs"
         />
         <input
           type="file"
           accept="image/*"
           onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-          className="border p-2 rounded w-32"
+          className="border p-1 rounded w-32 text-xs"
         />
         <button
           onClick={handleAdd}
           disabled={loading}
-          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:opacity-50"
+          className="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600 disabled:opacity-50 text-xs"
         >
-          Додати
+          {loading ? <Loader2 className="animate-spin w-4 h-4 mx-auto" /> : "Додати"}
         </button>
       </div>
 
       {/* Таблиця */}
-      <table className="w-full border-collapse shadow-lg">
+      <table className="w-full border-collapse shadow-lg text-center">
         <thead>
-          <tr className="bg-pink-100 text-left">
-            <th className="border p-2">ID</th>
+          <tr className="bg-[#AA824D] text-white text-xs">
             <th className="border p-2">Фото</th>
             <th className="border p-2">Назва</th>
             <th className="border p-2">Опис</th>
@@ -117,48 +122,64 @@ export default function CakesPage() {
         <tbody>
           {cakes.map((cake) => (
             <tr key={cake.id} className="bg-white hover:bg-pink-50">
-              <td className="border p-2">{cake.id}</td>
-              <td className="border p-2">
-                <img src={cake.imageUrl} alt={cake.name} className="w-20 h-20 object-cover rounded" />
+              <td className="border p-1">
+                <img src={cake.imageUrl} alt={cake.name} className="w-full h-20 object-cover  mx-auto" />
               </td>
               <td className="border p-2">
                 <input
                   type="text"
                   value={cake.name}
-                  onChange={(e) => setCakes(cakes.map(c => c.id === cake.id ? { ...c, name: e.target.value } : c))}
-                  className="border p-1 w-full"
+                  onChange={(e) =>
+                    setCakes(cakes.map(c => c.id === cake.id ? { ...c, name: e.target.value } : c))
+                  }
+                  className=" p-1 text-xs w-full text-center"
                 />
               </td>
               <td className="border p-2">
                 <input
                   type="text"
                   value={cake.description}
-                  onChange={(e) => setCakes(cakes.map(c => c.id === cake.id ? { ...c, description: e.target.value } : c))}
-                  className="border p-1 w-full"
+                  onChange={(e) =>
+                    setCakes(cakes.map(c => c.id === cake.id ? { ...c, description: e.target.value } : c))
+                  }
+                  className=" p-1 text-xs w-full text-center"
                 />
               </td>
               <td className="border p-2">
                 <input
                   type="number"
                   value={cake.price}
-                  onChange={(e) => setCakes(cakes.map(c => c.id === cake.id ? { ...c, price: parseFloat(e.target.value) } : c))}
-                  className="border p-1 w-24"
+                  onChange={(e) =>
+                    setCakes(cakes.map(c => c.id === cake.id ? { ...c, price: parseFloat(e.target.value) } : c))
+                  }
+                  className=" p-1 text-xs w-24 text-center mx-auto"
                 />
               </td>
-              <td className="border p-2 flex gap-2">
-                <button
-                  onClick={() => handleSave(cake)}
-                  className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
-                >
-                  Зберегти
-                </button>
-                <button
-                  onClick={() => handleDelete(cake.id)}
-                  className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
-                >
-                  Видалити
-                </button>
+              <td className="border p-2 text-center">
+                <div className="flex justify-center items-center gap-2">
+                  <div
+                    onClick={() => handleSave(cake)}
+                    className="cursor-pointer p-1 rounded hover:bg-blue-100 transition-colors flex items-center justify-center"
+                  >
+                    {savingId === cake.id ? (
+                      <Loader2 className="animate-spin w-5 h-5 text-blue-500" />
+                    ) : (
+                      <CheckCircle className="w-5 h-5 text-blue-500" />
+                    )}
+                  </div>
+                  <div
+                    onClick={() => handleDelete(cake.id)}
+                    className="cursor-pointer p-1 rounded hover:bg-red-100 transition-colors flex items-center justify-center"
+                  >
+                    {deletingId === cake.id ? (
+                      <Loader2 className="animate-spin w-5 h-5 text-red-500" />
+                    ) : (
+                      <XCircle className="w-5 h-5 text-red-500" />
+                    )}
+                  </div>
+                </div>
               </td>
+
             </tr>
           ))}
         </tbody>

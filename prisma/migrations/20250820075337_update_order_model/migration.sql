@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "public"."Order" ADD COLUMN     "paid" BOOLEAN NOT NULL DEFAULT false,
+ALTER COLUMN "totalPrice" SET DATA TYPE DOUBLE PRECISION;

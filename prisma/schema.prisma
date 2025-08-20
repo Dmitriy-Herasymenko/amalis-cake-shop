@@ -25,22 +25,34 @@ model Admin {
 }
 
 model Order {
-  id         Int      @id @default(autoincrement())
-  name       String
-  phone      String
-  address    String
-  callBack   Boolean
-  payment    String
-  paid       Boolean  @default(false)
-  status     String   @default("NEW")
-  comment    String?
-  items      Json
-  totalPrice Float
-  isNew      Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  name         String
+  phone        String
+  address      String?
+  callBack     Boolean
+  payment      String
+  isNew        Boolean  @default(true)
+  items        Json
+  totalPrice   Float
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  storeId      Int?
+  deliveryType String?
+  orderNumber  Int      @unique
+  status       String   @default("NEW")
+  comment      String?
+  paid         Boolean  @default(false)
+  store        Store?   @relation(fields: [storeId], references: [id])
 }
 
+model Store {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  address   String
+  phone     String?
+  createdAt DateTime @default(now())
+  orders    Order[]
+}
 
 enum OrderStatus {
   NEW
@@ -49,3 +61,7 @@ enum OrderStatus {
   COMPLETED
 }
 
+enum DeliveryType {
+  PICKUP
+  DELIVERY
+}

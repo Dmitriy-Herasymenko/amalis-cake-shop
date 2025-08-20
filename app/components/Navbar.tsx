@@ -5,6 +5,7 @@ import { Icons } from "../components/Icons";
 import { useCartStore } from "@/store/cartStore";
 
 export default function Navbar() {
+  
   const cartCount = useCartStore((state) => state.cart.length);
 
   return (
@@ -31,14 +32,19 @@ export default function Navbar() {
       </div>
 
       {/* Іконка корзини */}
-      <Link href="/basket" className="relative">
-        <Icons.ShoppingCart className="w-7 h-7 text-white hover:text-pink-600 transition" />
-        {cartCount > 0 && (
-          <span className="absolute -top-2 -right-2 bg-pink-500 text-white text-xs px-2 py-0.5 rounded-full">
-            {cartCount}
-          </span>
-        )}
-      </Link>
+      <div className="flex gap-4 font-medium text-white">
+        <Link href="/track-order" className="">Відстежити замовлення</Link>
+        <Link href="/basket" className="relative">
+
+          <Icons.ShoppingCart className="w-7 h-7 text-white hover:text-pink-600 transition" />
+          {cartCount > 0 && (
+            <span className="absolute -top-2 -right-2 bg-pink-500 text-white text-xs px-2 py-0.5 rounded-full">
+              {cartCount}
+            </span>
+          )}
+        </Link>
+      </div>
+
     </nav>
   );
 }

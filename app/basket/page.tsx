@@ -5,13 +5,16 @@ import Link from "next/link";
 import { useState } from "react";
 
 export default function BasketPage() {
-  const { cart, removeFromCart /*, clearCart*/ } = useCartStore();
+  const { cart, removeFromCart, clearCart } = useCartStore();
   const [removingId, setRemovingId] = useState<number | null>(null);
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<any>({});
   const [paymentMethod, setPaymentMethod] = useState<string>("");
   const [orderDone, setOrderDone] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [deliveryType, setDeliveryType] = useState<"PICKUP" | "DELIVERY">("PICKUP");
+  const [selectedStore, setSelectedStore] = useState<string>("");
+  const [orderNumber, setOrderNumber] = useState<string>("");
 
   const totalPrice = cart.reduce((sum, item) => sum + item.price, 0);
 
@@ -38,11 +41,11 @@ export default function BasketPage() {
       const body = {
         ...formData,
         payment,
+        deliveryType,
+        store: deliveryType === "PICKUP" ? selectedStore : null,
         items: cart.map(item => ({ id: item.id, name: item.name, price: item.price })),
         totalPrice,
       };
-
-      console.log("Sending order:", body);
 
       const res = await fetch("/api/orders", {
         method: "POST",
@@ -51,11 +54,9 @@ export default function BasketPage() {
       });
 
       const data = await res.json();
-      console.log("Server response:", data);
-
-      // поки закоментовано, щоб корзина не очищалась і не переходило на сторінку успіху
-      // setOrderDone(true);
-      // clearCart();
+      setOrderNumber(data.orderNumber || "не визначено");
+      setOrderDone(true);
+      clearCart();
     } catch (err) {
       console.error("Error sending order:", err);
       alert("Помилка при оформленні замовлення");
@@ -70,6 +71,9 @@ export default function BasketPage() {
         <h1 className="text-3xl md:text-4xl font-bold mb-4 text-green-600">
           ✅ Замовлення прийнято!
         </h1>
+        <p className="mb-4">
+          Номер вашого замовлення: <span className="font-bold">{orderNumber}</span>
+        </p>
         <Link
           href="/cakes"
           className="text-pink-500 underline hover:text-pink-700 text-lg"
@@ -149,7 +153,44 @@ export default function BasketPage() {
         >
           <input type="text" name="name" placeholder="Ім'я" required className="w-full p-3 border rounded-lg" />
           <input type="tel" name="phone" placeholder="Номер телефону" required className="w-full p-3 border rounded-lg" />
-          <input type="text" name="address" placeholder="Адреса доставки" required className="w-full p-3 border rounded-lg" />
+
+          <div className="mb-4">
+            <p className="font-semibold mb-1">Тип доставки:</p>
+            <select
+              value={deliveryType}
+              onChange={(e) => setDeliveryType(e.target.value as "PICKUP" | "DELIVERY")}
+              className="w-full p-3 border rounded-lg"
+            >
+              <option value="PICKUP">Самовивіз зі магазину</option>
+              <option value="DELIVERY">Доставка за адресою</option>
+            </select>
+          </div>
+
+          {deliveryType === "PICKUP" && (
+            <div className="mb-4">
+              <p className="font-semibold mb-1">Виберіть магазин:</p>
+              <select
+                value={selectedStore}
+                onChange={(e) => setSelectedStore(e.target.value)}
+                className="w-full p-3 border rounded-lg"
+                required
+              >
+                <option value="">Оберіть магазин</option>
+                <option value="Store 1">Store 1</option>
+                <option value="Store 2">Store 2</option>
+              </select>
+            </div>
+          )}
+
+          {deliveryType === "DELIVERY" && (
+            <input
+              type="text"
+              name="address"
+              placeholder="Ваша адреса"
+              required
+              className="w-full p-3 border rounded-lg mb-4"
+            />
+          )}
 
           <label className="flex items-center space-x-2">
             <input type="checkbox" name="callBack" className="w-4 h-4" />

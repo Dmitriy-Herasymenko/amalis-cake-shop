@@ -1,9 +1,7 @@
 import { prisma } from "@/app/lib/prisma";
 
-
 async function test() {
-const orders = await prisma.order.findMany({ orderBy: { createdAt: "desc" } });
-
+  const orders = await prisma.order.findMany({ orderBy: { createdAt: "desc" } });
   console.log(orders);
 }
 
@@ -14,22 +12,33 @@ export async function POST(req: Request) {
     const body = await req.json();
     console.log("Received order body:", body);
 
-    const { name, phone, address, callBack, payment, items, totalPrice } = body;
+    const { name, phone, address, callBack, payment, items, totalPrice, deliveryType, store } = body;
 
-    // Приводимо callBack до boolean
     const callBackBool = callBack === "on" || callBack === true;
+
+const orderNumber = Math.floor(100000 + Math.random() * 900000); // число
+   let storeConnect;
+    if (deliveryType === "PICKUP" && store) {
+      const storeRecord = await prisma.store.findUnique({ where: { name: store } });
+      if (storeRecord) {
+        storeConnect = { connect: { id: storeRecord.id } };
+      }
+    }
 
     const order = await prisma.order.create({
       data: {
         name,
         phone,
-        address,
+        address: deliveryType === "DELIVERY" ? address : null,
         callBack: callBackBool,
         payment,
-        items, // має бути валідний JSON
+        items,
         totalPrice,
         status: "NEW",
         isNew: true,
+        deliveryType,
+        store: storeConnect,
+        orderNumber,
       },
     });
 
@@ -41,7 +50,6 @@ export async function POST(req: Request) {
   }
 }
 
-
 export async function GET() {
   try {
     const orders = await prisma.order.findMany({ orderBy: { createdAt: "desc" } });
@@ -50,14 +58,13 @@ export async function GET() {
       headers: { "Content-Type": "application/json" },
     });
   } catch (e: any) {
-    console.error("GET /api/orders error:", e); // ← лог на сервер
+    console.error("GET /api/orders error:", e);
     return new Response(JSON.stringify({ error: e.message || "Error fetching orders" }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     });
   }
 }
-
 
 export async function PUT(req: Request) {
   try {
