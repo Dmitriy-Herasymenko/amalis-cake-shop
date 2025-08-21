@@ -7,23 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Cake {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String
-  price       Float
-  createdAt   DateTime @default(now())
-  imageUrl    String
-}
-
-model Admin {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now())
-  username  String?
-}
-
 model Order {
   id           Int      @id @default(autoincrement())
   name         String
@@ -52,6 +35,62 @@ model Store {
   phone     String?
   createdAt DateTime @default(now())
   orders    Order[]
+}
+
+model Cake {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+  price       Float
+  createdAt   DateTime @default(now())
+  imageUrl    String
+}
+
+model Admin {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  username  String?
+}
+
+model CustomCakeOrder {
+  id          Int                    @id @default(autoincrement())
+  name        String
+  phone       String
+  eventType   String?
+  weight      Float?
+  comment     String?
+  customImage String?
+  status      String                 @default("NEW")
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  ingredients CustomCakeIngredient[]
+}
+
+model Ingredient {
+  id          Int                    @id @default(autoincrement())
+  name        String
+  type        IngredientType
+  price       Float
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  customCakes CustomCakeIngredient[]
+}
+
+model CustomCakeIngredient {
+  id                Int             @id @default(autoincrement())
+  customCakeOrderId Int
+  ingredientId      Int
+  customCakeOrder   CustomCakeOrder @relation(fields: [customCakeOrderId], references: [id])
+  ingredient        Ingredient      @relation(fields: [ingredientId], references: [id])
+}
+
+enum IngredientType {
+  BISCUIT
+  CREAM
+  DECORATION
+  FILLING
 }
 
 enum OrderStatus {
