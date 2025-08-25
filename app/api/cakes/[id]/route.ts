@@ -1,4 +1,4 @@
-// app/api/cakes/[id]/route.ts
+
 import { PrismaClient } from "@prisma/client";
 import { NextResponse } from "next/server";
 

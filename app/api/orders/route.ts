@@ -10,8 +10,6 @@ test();
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    console.log("Received order body:", body);
-
     const { name, phone, address, callBack, payment, items, totalPrice, deliveryType, store } = body;
 
     const callBackBool = callBack === "on" || callBack === true;

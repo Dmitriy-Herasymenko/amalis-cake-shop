@@ -129,6 +129,8 @@ export default function AdminOrdersPage() {
       : o.status === "COMPLETED"
   );
 
+  
+
   console.log("Filtered Orders:", customOrders);
 
   return (
@@ -154,71 +156,92 @@ export default function AdminOrdersPage() {
         <p>Завантаження замовлень...</p>
       ) : (
         <>
-          {/* Звичайні замовлення */}
-          {filteredOrders.length > 0 && (
-            <table className="w-full bg-white rounded-lg shadow-md overflow-hidden mb-6">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="p-2">Номер</th>
-                  <th className="p-2">Ім'я</th>
-                  <th className="p-2">Телефон</th>
-                  <th className="p-2">Адреса</th>
-                  <th className="p-2">Товари</th>
-                  <th className="p-2">Сума</th>
-                  <th className="p-2">Оплата</th>
-                  <th className="p-2">Оплачено</th>
-                  <th className="p-2">Статус</th>
-                  <th className="p-2">Коментар</th>
-                  <th className="p-2">Тип</th>
-                  <th className="p-2">Дата</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredOrders.map((order) => (
-                  <tr key={order.id} className="border-b hover:bg-gray-50"  onClick={() => router.push(`orders/${order.id}`)}   >
-                    <td className="p-2">{order.orderNumber}</td>
-                    <td className="p-2">{order.name}</td>
-                    <td className="p-2">{order.phone}</td>
-                    <td className="p-2">{order.address}</td>
-                    <td className="p-2">
-                      {order.items.map((item) => (
-                        <div key={item.id}>
-                          {item.name} x {item.quantity || 1}
-                        </div>
-                      ))}
-                    </td>
-                    <td className="p-2">{order.totalPrice} грн</td>
-                    <td className="p-2">{order.payment}</td>
-                    <td className="p-2">{order.paid ? "Так" : "Ні"}</td>
-                    <td className="p-2">
-                      <select
-                        value={order.status}
-                        onChange={(e) =>
-                          handleOrderStatusChange(order.id, e.target.value as Order["status"])
-                        }
-                        className="border p-1 rounded"
-                      >
-                        {STATUS_OPTIONS.map((status) => (
-                          <option key={status} value={status}>
-                            {status === "NEW"
-                              ? "Новий"
-                              : status === "PROCESSING"
-                              ? "В процесі"
-                              : status === "DELIVERING"
-                              ? "Доставляється"
-                              : "Виконано"}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="p-2">{order.comment || "-"}</td>
-                    <td className="p-2">Звичайне</td>
-                    <td className="p-2">{new Date(order.createdAt).toLocaleString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+    {/* Звичайні замовлення */}
+{filteredOrders.length > 0 && (
+  <table className="w-full bg-white rounded-lg shadow-md overflow-hidden mb-6">
+    <thead className="bg-gray-100">
+      <tr>
+        <th className="p-2">Ім'я</th>
+        <th className="p-2">Телефон</th>
+        <th className="p-2">Адреса</th>
+        <th className="p-2">Товари</th>
+        <th className="p-2">Сума</th>
+        <th className="p-2">Оплата</th>
+        <th className="p-2">Оплачено</th>
+        <th className="p-2">Статус</th>
+        <th className="p-2">Коментар</th>
+        <th className="p-2">Тип</th>
+        <th className="p-2">Дата</th>
+      </tr>
+    </thead>
+    <tbody>
+      {filteredOrders.map((order) => (
+        <tr
+          key={order.id}
+          className="border-b hover:bg-gray-50 cursor-pointer"
+          onClick={() => router.push(`orders/${order.orderNumber}`)}
+        >
+          <td className="p-2">{order.name}</td>
+          <td className="p-2">{order.phone}</td>
+          <td className="p-2">{order.address}</td>
+          <td className="p-2">
+            {(() => {
+              // Групуємо товари за id
+              const groupedItems = order.items.reduce<Record<number, { name: string; quantity: number; price: number }>>(
+                (acc, item) => {
+                  if (acc[item.id]) {
+                    acc[item.id].quantity += 1;
+                  } else {
+                    acc[item.id] = { name: item.name, quantity: 1, price: item.price };
+                  }
+                  return acc;
+                },
+                {}
+              );
+
+              // Рендеримо без дублювань
+              return Object.values(groupedItems).map((item) => (
+                <div key={item.name}>
+                  {item.name} x {item.quantity} — {item.price} грн
+                </div>
+              ));
+            })()}
+          </td>
+          <td className="p-2">{order.totalPrice} грн</td>
+          <td className="p-2">{order.payment}</td>
+          <td className="p-2">{order.paid ? "Так" : "Ні"}</td>
+        <td className="p-2">
+  <select
+    value={order.status}
+    onChange={(e) =>
+      handleOrderStatusChange(order.id, e.target.value as Order["status"])
+    }
+    onClick={(e) => e.stopPropagation()} // ⬅️ важливо
+    className="border p-1 rounded"
+  >
+    {STATUS_OPTIONS.map((status) => (
+      <option key={status} value={status}>
+        {status === "NEW"
+          ? "Новий"
+          : status === "PROCESSING"
+          ? "В процесі"
+          : status === "DELIVERING"
+          ? "Доставляється"
+          : "Виконано"}
+      </option>
+    ))}
+  </select>
+</td>
+
+          <td className="p-2">{order.comment || "-"}</td>
+          <td className="p-2">Звичайне</td>
+          <td className="p-2">{new Date(order.createdAt).toLocaleString()}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+)}
+
 
           {/* Кастомні замовлення */}
           {filteredCustomOrders.length > 0 && (
@@ -239,7 +262,7 @@ export default function AdminOrdersPage() {
               </thead>
               <tbody>
                 {filteredCustomOrders.map((order) => (
-                  <tr key={order.id} className="border-b hover:bg-gray-50" onClick={() => router.push(`orders/${order.id}`)}>
+                  <tr key={order.id} className="border-b hover:bg-gray-50" onClick={() => router.push(`orders/${order.orderNumber}`)}>
                     <td className="p-2">{order.id}</td>
                     <td className="p-2">{order.name}</td>
                     <td className="p-2">{order.phone}</td>

@@ -16,7 +16,7 @@ type CustomCakeOrder = {
   weight?: number;
   comment?: string;
   customImage?: File | null;
-  ingredients: number[]; // масив id інгредієнтів
+  ingredients: number[]; 
 };
 
 export default function CustomCakePage() {

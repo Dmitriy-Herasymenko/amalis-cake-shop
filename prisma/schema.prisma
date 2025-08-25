@@ -8,24 +8,39 @@ datasource db {
 }
 
 model Order {
-  id           Int      @id @default(autoincrement())
+  id           Int           @id @default(autoincrement())
   name         String
   phone        String
   address      String?
   callBack     Boolean
   payment      String
-  isNew        Boolean  @default(true)
+  isNew        Boolean       @default(true)
   items        Json
   totalPrice   Float
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
   storeId      Int?
-  deliveryType String?
-  orderNumber  Int      @unique
-  status       String   @default("NEW")
+  orderNumber  Int           @unique
   comment      String?
-  paid         Boolean  @default(false)
-  store        Store?   @relation(fields: [storeId], references: [id])
+  paid         Boolean       @default(false)
+  deliveryType DeliveryType?
+  status       OrderStatus   @default(NEW)
+  store        Store?        @relation(fields: [storeId], references: [id])
+}
+
+model CustomCakeOrder {
+  id          Int                    @id @default(autoincrement())
+  name        String
+  phone       String
+  eventType   String?
+  weight      Float?
+  comment     String?
+  customImage String?
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  orderNumber Int                    @unique @default(dbgenerated("floor(((random() * (900000)::double precision) + (100000)::double precision))"))
+  status      OrderStatus            @default(NEW)
+  ingredients CustomCakeIngredient[]
 }
 
 model Store {
@@ -52,20 +67,6 @@ model Admin {
   password  String
   createdAt DateTime @default(now())
   username  String?
-}
-
-model CustomCakeOrder {
-  id          Int                    @id @default(autoincrement())
-  name        String
-  phone       String
-  eventType   String?
-  weight      Float?
-  comment     String?
-  customImage String?
-  status      String                 @default("NEW")
-  createdAt   DateTime               @default(now())
-  updatedAt   DateTime               @updatedAt
-  ingredients CustomCakeIngredient[]
 }
 
 model Ingredient {
