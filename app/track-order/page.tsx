@@ -31,7 +31,7 @@ export default function TrackOrderPage() {
       setOrder(data);
     } catch (err: any) {
       setError(err.message || "Помилка при отриманні замовлення");
-    } finally {
+    } finally { 
       setLoading(false);
     }
   };

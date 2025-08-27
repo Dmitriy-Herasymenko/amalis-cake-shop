@@ -30,6 +30,7 @@ type CustomOrder = {
   comment?: string;
   status: "NEW" | "PROCESSING" | "DELIVERING" | "COMPLETED";
   ingredients: { id: number; ingredient: { name: string } }[];
+  orderNumber: number;
   customImage?: string;
   createdAt: string;
   updatedAt: string;
@@ -129,9 +130,7 @@ export default function AdminOrdersPage() {
       : o.status === "COMPLETED"
   );
 
-  
 
-  console.log("Filtered Orders:", customOrders);
 
   return (
     <div className="p-6 min-h-screen bg-gray-50">
@@ -248,7 +247,6 @@ export default function AdminOrdersPage() {
             <table className="w-full bg-white rounded-lg shadow-md overflow-hidden" >
               <thead className="bg-gray-100">
                 <tr>
-                  <th className="p-2">ID</th>
                   <th className="p-2">Ім'я</th>
                   <th className="p-2">Телефон</th>
                   <th className="p-2">Вага/Тип</th>
@@ -261,9 +259,8 @@ export default function AdminOrdersPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredCustomOrders.map((order) => (
-                  <tr key={order.id} className="border-b hover:bg-gray-50" onClick={() => router.push(`orders/${order.orderNumber}`)}>
-                    <td className="p-2">{order.id}</td>
+                {filteredCustomOrders?.map((order) => (
+                  <tr key={order.id} className="border-b hover:bg-gray-50" onClick={() => router.push(`custom-cakes/${order?.orderNumber}`)}>
                     <td className="p-2">{order.name}</td>
                     <td className="p-2">{order.phone}</td>
                     <td className="p-2">

@@ -1,4 +1,4 @@
-// app/api/orders/[orderNumber]/route.ts
+// app/api/custom-cakes/[orderNumber]/route.ts
 import { prisma } from "@/app/lib/prisma";
 
 interface Params {
@@ -6,25 +6,20 @@ interface Params {
 }
 
 export async function GET(_req: Request, { params }: Params) {
-  const orderNumber = Number(params.orderNumber);
-  if (isNaN(orderNumber)) {
-    return new Response("Некоректний номер замовлення", { status: 400 });
-  }
-
   try {
-    const order = await prisma.order.findUnique({
+    const orderNumber = Number(params.orderNumber);
+    if (isNaN(orderNumber)) {
+      return new Response("Некоректний номер замовлення", { status: 400 });
+    }
+
+    const order = await prisma.customCakeOrder.findUnique({
       where: { orderNumber },
-      select: {
-        orderNumber: true,
-        status: true,
-        paid: true,
-        totalPrice: true,
-        items: true,
-        name: true,
-        phone: true,
-        address: true,
-        deliveryType: true,
-        comment: true,
+      include: {
+        ingredients: {
+          include: {
+            ingredient: true,
+          },
+        },
       },
     });
 
@@ -34,9 +29,10 @@ export async function GET(_req: Request, { params }: Params) {
 
     return new Response(JSON.stringify(order), {
       headers: { "Content-Type": "application/json" },
+      status: 200,
     });
   } catch (error: any) {
-    console.error("GET /api/orders/[orderNumber] error:", error);
+    console.error("GET /api/custom-cakes/[orderNumber] error:", error);
     return new Response(error.message || "Помилка отримання замовлення", { status: 500 });
   }
 }

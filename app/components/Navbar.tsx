@@ -23,7 +23,7 @@ export default function Navbar() {
         <Link href="/cakes" className="hover:text-pink-600 transition">
           Торти
         </Link>
-        <Link href="/constructor" className="hover:text-pink-600 transition">
+        <Link href="/custom-cakes" className="hover:text-pink-600 transition">
           Конструктор торта
         </Link>
         <Link href="/contacts" className="hover:text-pink-600 transition">
