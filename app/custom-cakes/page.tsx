@@ -16,7 +16,9 @@ type CustomCakeOrder = {
   weight?: number;
   comment?: string;
   customImage?: File | null;
-  ingredients: number[]; 
+  ingredients: number[];
+  address?: string;
+  deliveryType?: "PICKUP" | "DELIVERY";
 };
 
 export default function CustomCakePage() {
@@ -29,8 +31,12 @@ export default function CustomCakePage() {
     comment: "",
     customImage: null,
     ingredients: [],
+    deliveryType: "PICKUP",
   });
   const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState(1);
+  const [paymentMethod, setPaymentMethod] = useState<string>("");
+  const [orderNumber, setOrderNumber] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/ingredients")
@@ -40,7 +46,7 @@ export default function CustomCakePage() {
   }, []);
 
   const handleIngredientToggle = (id: number) => {
-    if (order.customImage) return; // блокування вибору інгредієнтів якщо фото
+    if (order.customImage) return;
     setOrder((prev) => ({
       ...prev,
       ingredients: prev.ingredients.includes(id)
@@ -49,132 +55,230 @@ export default function CustomCakePage() {
     }));
   };
 
-  const handleSubmit = async () => {
-    if (!order.name || !order.phone) {
-      alert("Будь ласка, заповніть ім'я та телефон");
-      return;
-    }
-
+  const submitOrder = async () => {
     setLoading(true);
     const formData = new FormData();
-    formData.append("name", order.name);
-    formData.append("phone", order.phone);
-    formData.append("eventType", order.eventType);
-    if (order.weight) formData.append("weight", String(order.weight));
-    if (order.comment) formData.append("comment", order.comment);
-    if (order.customImage) formData.append("customImage", order.customImage);
-    formData.append("ingredients", JSON.stringify(order.ingredients));
+    Object.entries(order).forEach(([key, value]) => {
+      if (value) {
+        if (key === "ingredients") {
+          formData.append("ingredients", JSON.stringify(value));
+        } else if (key === "customImage" && value instanceof File) {
+          formData.append("customImage", value);
+        } else {
+          formData.append(key, String(value));
+        }
+      }
+    });
 
     try {
       const res = await fetch("/api/custom-cakes", {
         method: "POST",
         body: formData,
       });
-      if (res.ok) {
-        alert("Ваше замовлення успішно відправлено!");
-        setOrder({
-          name: "",
-          phone: "",
-          eventType: "",
-          weight: undefined,
-          comment: "",
-          customImage: null,
-          ingredients: [],
-        });
-      } else {
-        alert("Сталася помилка. Спробуйте ще раз.");
-      }
+      const data = await res.json();
+      setOrderNumber(data.orderNumber || "невідомо");
+      setStep(4);
     } catch (err) {
       console.error(err);
-      alert("Помилка при відправці замовлення");
+      alert("Помилка при оформленні замовлення");
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="p-4 max-w-4xl mx-auto font-sans">
-      <h1 className="text-2xl font-bold mb-4">Створи свій торт</h1>
+  // ================= RENDER =================
 
-      {/* Інформація про замовника */}
-      <div className="flex flex-col gap-2 mb-4">
-        <input
-          type="text"
-          placeholder="Ім'я"
-          value={order.name}
-          onChange={(e) => setOrder({ ...order, name: e.target.value })}
-          className="border p-2 rounded"
-        />
-        <input
-          type="text"
-          placeholder="Телефон"
-          value={order.phone}
-          onChange={(e) => setOrder({ ...order, phone: e.target.value })}
-          className="border p-2 rounded"
-        />
-        <input
-          type="text"
-          placeholder="Подія (День народження, Весілля...)"
-          value={order.eventType}
-          onChange={(e) => setOrder({ ...order, eventType: e.target.value })}
-          className="border p-2 rounded"
-        />
-        <input
-          type="number"
-          placeholder="Вага (кг)"
-          value={order.weight || ""}
-          onChange={(e) =>
-            setOrder({ ...order, weight: parseFloat(e.target.value) })
-          }
-          className="border p-2 rounded"
-        />
-        <textarea
-          placeholder="Коментар"
-          value={order.comment}
-          onChange={(e) => setOrder({ ...order, comment: e.target.value })}
-          className="border p-2 rounded"
-        />
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) =>
-            setOrder({ ...order, customImage: e.target.files?.[0] || null })
-          }
-          className="border p-2 rounded"
-        />
+  if (step === 4) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-pink-50 px-5">
+        <h1 className="text-3xl md:text-4xl font-bold mb-4 text-green-600">
+          ✅ Замовлення прийнято!
+        </h1>
+        <p className="mb-4">
+          Номер вашого замовлення:{" "}
+          <span className="font-bold">{orderNumber}</span>
+        </p>
       </div>
+    );
+  }
 
-      {/* Вибір інгредієнтів */}
-      {!order.customImage && (
-        <div className="mb-4">
-          <h2 className="font-semibold mb-2">Виберіть інгредієнти:</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            {ingredients.map((ing) => (
-              <div
-                key={ing.id}
-                className={`border p-2 rounded cursor-pointer text-center ${
-                  order.ingredients.includes(ing.id)
-                    ? "bg-blue-100 border-blue-400"
-                    : "hover:bg-gray-100"
-                }`}
-                onClick={() => handleIngredientToggle(ing.id)}
-              >
-                <div className="font-semibold">{ing.name}</div>
-                <div className="text-xs">{ing.type}</div>
-                <div className="text-xs">{ing.price} грн</div>
+  return (
+    <div className="min-h-screen bg-pink-50 py-10 px-5 md:px-20">
+      <h1 className="text-4xl md:text-5xl font-bold text-center text-pink-600 mb-10">
+        Створення кастомного торта
+      </h1>
+
+      {/* Step 1 */}
+      {step === 1 && (
+        <div className="bg-white p-6 rounded-2xl shadow-md space-y-4">
+          <input
+            type="text"
+            placeholder="Ім'я"
+            value={order.name}
+            onChange={(e) => setOrder({ ...order, name: e.target.value })}
+            className="w-full p-3 border rounded-lg"
+          />
+          <input
+            type="text"
+            placeholder="Телефон"
+            value={order.phone}
+            onChange={(e) => setOrder({ ...order, phone: e.target.value })}
+            className="w-full p-3 border rounded-lg"
+          />
+          <input
+            type="text"
+            placeholder="Подія (День народження, Весілля...)"
+            value={order.eventType}
+            onChange={(e) => setOrder({ ...order, eventType: e.target.value })}
+            className="w-full p-3 border rounded-lg"
+          />
+          <input
+            type="number"
+            placeholder="Вага (кг)"
+            value={order.weight || ""}
+            onChange={(e) =>
+              setOrder({ ...order, weight: parseFloat(e.target.value) })
+            }
+            className="w-full p-3 border rounded-lg"
+          />
+          <textarea
+            placeholder="Коментар"
+            value={order.comment}
+            onChange={(e) => setOrder({ ...order, comment: e.target.value })}
+            className="w-full p-3 border rounded-lg"
+          />
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) =>
+              setOrder({ ...order, customImage: e.target.files?.[0] || null })
+            }
+            className="w-full p-3 border rounded-lg"
+          />
+
+          {!order.customImage && (
+            <div>
+              <h2 className="font-semibold mb-2">Виберіть інгредієнти:</h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {ingredients.map((ing) => (
+                  <div
+                    key={ing.id}
+                    className={`border p-2 rounded cursor-pointer text-center ${
+                      order.ingredients.includes(ing.id)
+                        ? "bg-blue-100 border-blue-400"
+                        : "hover:bg-gray-100"
+                    }`}
+                    onClick={() => handleIngredientToggle(ing.id)}
+                  >
+                    <div className="font-semibold">{ing.name}</div>
+                    <div className="text-xs">{ing.type}</div>
+                    <div className="text-xs">{ing.price} грн</div>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+          )}
+
+          <button
+            onClick={() => setStep(2)}
+            className="w-full bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 mt-4"
+          >
+            Далі
+          </button>
+        </div>
+      )}
+
+      {/* Step 2 */}
+      {step === 2 && (
+        <div className="bg-white p-6 rounded-2xl shadow-md space-y-4">
+          <p className="font-semibold mb-1">Тип доставки:</p>
+          <select
+            value={order.deliveryType}
+            onChange={(e) =>
+              setOrder({
+                ...order,
+                deliveryType: e.target.value as "PICKUP" | "DELIVERY",
+              })
+            }
+            className="w-full p-3 border rounded-lg"
+          >
+            <option value="PICKUP">Самовивіз</option>
+            <option value="DELIVERY">Доставка</option>
+          </select>
+
+          {order.deliveryType === "DELIVERY" && (
+            <input
+              type="text"
+              placeholder="Адреса доставки"
+              value={order.address || ""}
+              onChange={(e) =>
+                setOrder({ ...order, address: e.target.value })
+              }
+              className="w-full p-3 border rounded-lg"
+            />
+          )}
+
+          <div className="flex space-x-4">
+            <button
+              onClick={() => setStep(1)}
+              className="flex-1 bg-gray-300 py-3 rounded-lg hover:bg-gray-400"
+            >
+              Назад
+            </button>
+            <button
+              onClick={() => setStep(3)}
+              className="flex-1 bg-green-500 text-white py-3 rounded-lg hover:bg-green-600"
+            >
+              Далі
+            </button>
           </div>
         </div>
       )}
 
-      <button
-        onClick={handleSubmit}
-        disabled={loading}
-        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:opacity-50"
-      >
-        {loading ? "Відправка..." : "Замовити"}
-      </button>
+      {/* Step 3 */}
+      {step === 3 && (
+        <div className="bg-white p-6 rounded-2xl shadow-md space-y-4">
+          <p className="font-semibold mb-2">Спосіб оплати:</p>
+
+          <label className="flex items-center space-x-2">
+            <input
+              type="radio"
+              name="payment"
+              value="paypass"
+              checked={paymentMethod === "paypass"}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+            />
+            <span>PayPass</span>
+          </label>
+
+          <label className="flex items-center space-x-2">
+            <input
+              type="radio"
+              name="payment"
+              value="cash"
+              checked={paymentMethod === "cash"}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+            />
+            <span>При отриманні</span>
+          </label>
+
+          <div className="flex space-x-4">
+            <button
+              onClick={() => setStep(2)}
+              className="flex-1 bg-gray-300 py-3 rounded-lg hover:bg-gray-400"
+            >
+              Назад
+            </button>
+            <button
+              disabled={loading || !paymentMethod}
+              onClick={submitOrder}
+              className="flex-1 bg-green-500 text-white py-3 rounded-lg hover:bg-green-600"
+            >
+              {loading ? "Відправка..." : "Підтвердити"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
