@@ -5,8 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 export default function BasketPage() {
-  const { cart, removeFromCart, clearCart } = useCartStore();
-  const [removingId, setRemovingId] = useState<number | null>(null);
+  const { cart, removeFromCart, updateQuantity, clearCart } = useCartStore();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<any>({});
   const [paymentMethod, setPaymentMethod] = useState<string>("");
@@ -16,15 +15,7 @@ export default function BasketPage() {
   const [selectedStore, setSelectedStore] = useState<string>("");
   const [orderNumber, setOrderNumber] = useState<string>("");
 
-  const totalPrice = cart.reduce((sum, item) => sum + item.price, 0);
-
-  const handleRemove = (id: number) => {
-    setRemovingId(id);
-    setTimeout(() => {
-      removeFromCart(id);
-      setRemovingId(null);
-    }, 300);
-  };
+  const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,38 +24,49 @@ export default function BasketPage() {
     setStep(3);
   };
 
-  const submitOrder = async (payment: string) => {
-    if (cart.length === 0) return;
-    setLoading(true);
+const submitOrder = async (payment: string) => {
+  if (cart.length === 0) return;
+  setLoading(true);
 
-    try {
-      const body = {
-        ...formData,
-        payment,
-        deliveryType,
-        store: deliveryType === "PICKUP" ? selectedStore : null,
-        items: cart.map(item => ({ id: item.id, name: item.name, price: item.price })),
-        totalPrice,
-      };
+  try {
+    // Розгортаємо кількість у дублікати
+    const expandedItems = cart.flatMap(item =>
+      Array(item.quantity).fill({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+      })
+    );
 
-      const res = await fetch("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
+    const body = {
+      ...formData,
+      payment,
+      deliveryType,
+      store: deliveryType === "PICKUP" ? selectedStore : null,
+      items: expandedItems, // 👈 тут дублікати!
+      totalPrice,
+    };
 
-      const data = await res.json();
-      setOrderNumber(data.orderNumber || "не визначено");
-      setOrderDone(true);
-      clearCart();
-    } catch (err) {
-      console.error("Error sending order:", err);
-      alert("Помилка при оформленні замовлення");
-    } finally {
-      setLoading(false);
-    }
-  };
+    const res = await fetch("/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
 
+    const data = await res.json();
+    setOrderNumber(data.orderNumber || "не визначено");
+    setOrderDone(true);
+    clearCart();
+  } catch (err) {
+    console.error("Error sending order:", err);
+    alert("Помилка при оформленні замовлення");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+  // ✅ Замовлення успішне
   if (orderDone) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-pink-50 px-5">
@@ -84,6 +86,7 @@ export default function BasketPage() {
     );
   }
 
+  // ✅ Порожня корзина
   if (cart.length === 0) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-pink-50 px-5">
@@ -109,21 +112,34 @@ export default function BasketPage() {
       {/* Крок 1: Корзина */}
       {step === 1 && (
         <>
-          <div className="space-y-4">
-            {cart.map((item, idx) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {cart.map((item, index) => (
               <div
-                key={`${item.id}-${idx}`}
-                className={`flex items-center justify-between bg-white rounded-2xl shadow-md p-4 transition-all duration-300 transform ${
-                  removingId === item.id ? "opacity-0 -translate-x-20" : "opacity-100 translate-x-0"
-                }`}
+                key={`${item.id}-${index}`}
+                className="flex items-center justify-between bg-white rounded-2xl shadow-md p-4"
               >
                 <div>
                   <p className="text-lg font-semibold text-gray-800">{item.name}</p>
                   <p className="text-gray-500">{item.price} грн</p>
+                  <div className="flex items-center gap-3 mt-2">
+                    <button
+                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                    >
+                      −
+                    </button>
+                    <span>{item.quantity}</span>
+                    <button
+                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
                 <button
-                  onClick={() => handleRemove(item.id)}
-                  className="text-red-500 font-bold hover:text-red-700 transition cursor-pointer"
+                  onClick={() => removeFromCart(item.id)}
+                  className="text-red-500 font-bold hover:text-red-700 transition cursor-pointer text-xl"
                 >
                   ×
                 </button>
@@ -154,7 +170,7 @@ export default function BasketPage() {
           <input type="text" name="name" placeholder="Ім'я" required className="w-full p-3 border rounded-lg" />
           <input type="tel" name="phone" placeholder="Номер телефону" required className="w-full p-3 border rounded-lg" />
 
-          <div className="mb-4">
+          <div>
             <p className="font-semibold mb-1">Тип доставки:</p>
             <select
               value={deliveryType}
@@ -167,7 +183,7 @@ export default function BasketPage() {
           </div>
 
           {deliveryType === "PICKUP" && (
-            <div className="mb-4">
+            <div>
               <p className="font-semibold mb-1">Виберіть магазин:</p>
               <select
                 value={selectedStore}
@@ -188,7 +204,7 @@ export default function BasketPage() {
               name="address"
               placeholder="Ваша адреса"
               required
-              className="w-full p-3 border rounded-lg mb-4"
+              className="w-full p-3 border rounded-lg"
             />
           )}
 
