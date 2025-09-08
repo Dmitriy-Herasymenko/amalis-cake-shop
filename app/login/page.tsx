@@ -30,25 +30,25 @@ if (!res.ok) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-pink-50">
+    <div className="min-h-screen flex items-center justify-center ">
       <form onSubmit={handleSubmit} className="bg-white p-8 rounded-xl shadow-md w-96">
-        <h1 className="text-2xl font-bold mb-6 text-pink-600">Вхід в адмінку</h1>
+        <h1 className="text-2xl font-bold mb-6 text-[#B09B73]">Вхід в адмінку</h1>
         {error && <p className="text-red-500 mb-4">{error}</p>}
         <input
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full p-2 mb-4 border rounded text-black"
+          className="w-full p-2 mb-4 border rounded text-[#BDA684]"
         />
         <input
           type="password"
           placeholder="Пароль"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-2 mb-4 border rounded text-black"
+          className="w-full p-2 mb-4 border rounded text-[#BDA684]"
         />
-        <button className="w-full bg-pink-500 text-white py-2 rounded hover:bg-pink-600 transition">
+        <button className="w-full bg-[#C49F68] text-white py-2 rounded hover:bg-[#B09B73]transition">
           Увійти
         </button>
       </form>

@@ -17,12 +17,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   return (
-    <div className="min-h-screen flex  bg-[#EBE9F5] font-sans">
+    <div className="min-h-screen flex  bg-[#EFEADE] font-sans">
       {/* Sidebar */}
       <Sidebar />
 
       {/* Main content */}
-      <main className="flex-1 p-10 bg-[#EBE9F5]">
+      <main className="flex-1 p-10 bg-[#EFEADE]">
         <div className="max-w-8xl mx-auto bg-white rounded-3xl shadow-2xl p-10">
           {children}
         </div>
