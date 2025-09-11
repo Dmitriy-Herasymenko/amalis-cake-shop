@@ -36,11 +36,16 @@ model CustomCakeOrder {
   weight      Float?
   comment     String?
   customImage String?
+  persons     Int?                           
+  tiers       Int?                   
+  totalPrice  Float?                 
   createdAt   DateTime               @default(now())
   updatedAt   DateTime               @updatedAt
   orderNumber Int                    @unique @default(dbgenerated("floor(((random() * (900000)::double precision) + (100000)::double precision))"))
   status      OrderStatus            @default(NEW)
   ingredients CustomCakeIngredient[]
+  minimumWeight Float?           
+  rushOrder     Boolean?              
 }
 
 model Store {
@@ -72,7 +77,7 @@ model Admin {
 model Ingredient {
   id          Int                    @id @default(autoincrement())
   name        String
-  type        IngredientType
+  type        IngredientType          // Категорія інгредієнта
   price       Float
   createdAt   DateTime               @default(now())
   updatedAt   DateTime               @updatedAt
@@ -89,9 +94,10 @@ model CustomCakeIngredient {
 
 enum IngredientType {
   BISCUIT
+  SOAKING
   CREAM
-  DECORATION
   FILLING
+  DECOR
 }
 
 enum OrderStatus {

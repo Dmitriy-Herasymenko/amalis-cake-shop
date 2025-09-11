@@ -77,25 +77,98 @@ const cakes = [
 ];
 
 const ingredients = [
-  // Бісквіти
-  { name: "Шоколадний бісквіт", type: "BISCUIT", price: 150 },
-  { name: "Ванільний бісквіт", type: "BISCUIT", price: 140 },
-  { name: "Медовий бісквіт", type: "BISCUIT", price: 160 },
+  // =====================
+  // 1. Бісквіти
+  // =====================
+  { name: "Ванільний", type: "BISCUIT", price: 140 },
+  { name: "Шоколадний", type: "BISCUIT", price: 150 },
+  { name: "Лимонний", type: "BISCUIT", price: 150 },
+  { name: "Червоний оксамит", type: "BISCUIT", price: 160 },
+  { name: "Горіховий", type: "BISCUIT", price: 170 },
+  { name: "Маковий", type: "BISCUIT", price: 160 },
 
-  // Креми
-  { name: "Крем-чиз", type: "CREAM", price: 100 },
-  { name: "Шоколадний крем", type: "CREAM", price: 120 },
-  { name: "Ванільний крем", type: "CREAM", price: 110 },
+  // =====================
+  // 2. Просочення
+  // =====================
+  { name: "Класичне цукрове", type: "SOAKING", price: 0 },
+  { name: "Цитрусове", type: "SOAKING", price: 0 },
+  { name: "Фруктове", type: "SOAKING", price: 0 },
+  { name: "Карамельне", type: "SOAKING", price: 0 },
+  { name: "Молочне", type: "SOAKING", price: 0 },
+  { name: "Кавове", type: "SOAKING", price: 0 },
 
-  // Начинки
-  { name: "Полунична начинка", type: "FILLING", price: 80 },
-  { name: "Вишнева начинка", type: "FILLING", price: 90 },
-  { name: "Малиновий джем", type: "FILLING", price: 85 },
+  // алкогольні просочення
+  { name: "Коньяк", type: "SOAKING", price: 50 },
+  { name: "Горілка", type: "SOAKING", price: 50 },
+  { name: "Апероль", type: "SOAKING", price: 70 },
+  { name: "Кокосовий лікер", type: "SOAKING", price: 70 },
+  { name: "Єгермейстер", type: "SOAKING", price: 80 },
 
-  // Декор
-  { name: "Ягоди та декор", type: "DECORATION", price: 60 },
-  { name: "Фігурки з мастики", type: "DECORATION", price: 150 },
-  { name: "Горіхи та посипка", type: "DECORATION", price: 70 },
+  // =====================
+  // 3. Креми
+  // =====================
+  { name: "Крем з м’якого сиру + масло", type: "CREAM", price: 100 },
+  { name: "Крем на маскарпоне", type: "CREAM", price: 120 },
+  { name: "Крем вершково-йогуртовий", type: "CREAM", price: 110 },
+  { name: "Шоколадний крем-чіз", type: "CREAM", price: 130 },
+  { name: "Крем сирково-ягідний", type: "CREAM", price: 120 },
+  { name: "Крем зі згущеним молоком", type: "CREAM", price: 110 },
+
+  // =====================
+  // 4. Начинка
+  // =====================
+  { name: "Ганаш молочний шоколад", type: "FILLING", price: 60 },
+  { name: "Ганаш білий шоколад", type: "FILLING", price: 60 },
+  { name: "Ганаш чорний шоколад", type: "FILLING", price: 60 },
+  { name: "Солодка карамель", type: "FILLING", price: 50 },
+  { name: "Солона карамель", type: "FILLING", price: 55 },
+
+  // ягоди
+  { name: "Малина", type: "FILLING", price: 70 },
+  { name: "Полуниця", type: "FILLING", price: 70 },
+  { name: "Чорниця", type: "FILLING", price: 70 },
+  { name: "Абрикос", type: "FILLING", price: 70 },
+  { name: "Вишня", type: "FILLING", price: 70 },
+
+  // вишня в алкоголі
+  { name: "Вишня в амаретто", type: "FILLING", price: 90 },
+  { name: "Вишня в коньяку", type: "FILLING", price: 90 },
+  { name: "Вишня в горілці", type: "FILLING", price: 85 },
+
+  // горіхи
+  { name: "Фундук", type: "FILLING", price: 80 },
+  { name: "Мигдаль", type: "FILLING", price: 80 },
+  { name: "Фісташка", type: "FILLING", price: 120 },
+  { name: "Волоський горіх", type: "FILLING", price: 80 },
+  { name: "Кешью", type: "FILLING", price: 100 },
+  { name: "Арахіс", type: "FILLING", price: 60 },
+
+  { name: "Карамелізовані банани", type: "FILLING", price: 80 },
+  { name: "Кокосова начинка", type: "FILLING", price: 70 },
+  { name: "Горіхове праліне", type: "FILLING", price: 100 },
+  { name: "Цитрусовий курд", type: "FILLING", price: 80 },
+
+  // екзотичні
+  { name: "Манго-ананас", type: "FILLING", price: 100 },
+  { name: "Манго-маракуйя", type: "FILLING", price: 100 },
+  { name: "Персик-манго", type: "FILLING", price: 100 },
+  { name: "Персик-маракуйя", type: "FILLING", price: 100 },
+
+  // сухофрукти
+  { name: "Курага", type: "FILLING", price: 60 },
+  { name: "Фінік", type: "FILLING", price: 60 },
+  { name: "Чорнослив", type: "FILLING", price: 60 },
+  { name: "Журавлина", type: "FILLING", price: 60 },
+
+  // =====================
+  // 5. Декор
+  // =====================
+  { name: "Стандартний (голий торт)", type: "DECOR", price: 0 },
+  { name: "Два яруси (від 3.5 кг)", type: "DECOR", price: 0 },
+  { name: "Три яруси (від 5 кг)", type: "DECOR", price: 0 },
+  { name: "Ягоди та декор", type: "DECOR", price: 60 },
+  { name: "Фігурки з мастики", type: "DECOR", price: 150 },
+  { name: "Горіхи та посипка", type: "DECOR", price: 70 },
 ];
 
 async function main() {

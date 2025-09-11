@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 type IngredientType = {
   id: number;
   name: string;
-  type: string;
+  type: "BISCUIT" | "SOAKING" | "CREAM" | "FILLING" | "DECOR";
   price: number;
 };
 
@@ -13,12 +13,24 @@ type CustomCakeOrder = {
   name: string;
   phone: string;
   eventType: string;
+  persons?: number;
   weight?: number;
+  tiers?: number;
+  urgent?: boolean;
   comment?: string;
   customImage?: File | null;
   ingredients: number[];
   address?: string;
   deliveryType?: "PICKUP" | "DELIVERY";
+};
+
+// Мапа категорій → українські назви
+const CATEGORY_LABELS: Record<IngredientType["type"], string> = {
+  BISCUIT: "Бісквіт (1 варіант)",
+  SOAKING: "Просочення (до 2 варіантів)",
+  CREAM: "Крем (1 варіант)",
+  FILLING: "Начинка (до 3 варіантів)",
+  DECOR: "Декор",
 };
 
 export default function CustomCakePage() {
@@ -27,7 +39,10 @@ export default function CustomCakePage() {
     name: "",
     phone: "",
     eventType: "",
+    persons: undefined,
     weight: undefined,
+    tiers: undefined,
+    urgent: false,
     comment: "",
     customImage: null,
     ingredients: [],
@@ -38,6 +53,7 @@ export default function CustomCakePage() {
   const [paymentMethod, setPaymentMethod] = useState<string>("");
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
 
+  // Завантаження інгредієнтів
   useEffect(() => {
     fetch("/api/ingredients")
       .then((res) => res.json())
@@ -45,21 +61,51 @@ export default function CustomCakePage() {
       .catch((err) => console.error(err));
   }, []);
 
-  const handleIngredientToggle = (id: number) => {
-    if (order.customImage) return;
+  // Обмеження вибору інгредієнтів
+  const handleIngredientToggle = (id: number, type: IngredientType["type"]) => {
+    const currentSelected = order.ingredients
+      .map((ingId) => ingredients.find((i) => i.id === ingId))
+      .filter(Boolean) as IngredientType[];
+
+    const typeCount = currentSelected.filter((i) => i.type === type).length;
+
+    let limit = Infinity;
+    if (type === "BISCUIT") limit = 1;
+    if (type === "SOAKING") limit = 2;
+    if (type === "CREAM") limit = 1;
+    if (type === "FILLING") limit = 3;
+
+    const isSelected = order.ingredients.includes(id);
+
+    if (!isSelected && typeCount >= limit) {
+      alert(`Можна вибрати не більше ${limit} для категорії ${CATEGORY_LABELS[type]}`);
+      return;
+    }
+
     setOrder((prev) => ({
       ...prev,
-      ingredients: prev.ingredients.includes(id)
+      ingredients: isSelected
         ? prev.ingredients.filter((i) => i !== id)
         : [...prev.ingredients, id],
     }));
   };
 
+  // Розрахунок ваги по кількості осіб
+  useEffect(() => {
+    if (order.persons) {
+      if (order.persons <= 5) setOrder((p) => ({ ...p, weight: 1 }));
+      else if (order.persons <= 8) setOrder((p) => ({ ...p, weight: 1.5 }));
+      else if (order.persons <= 12) setOrder((p) => ({ ...p, weight: 2 }));
+      else setOrder((p) => ({ ...p, weight: +(order.persons * 0.18).toFixed(1) }));
+    }
+  }, [order.persons]);
+
+  // Submit
   const submitOrder = async () => {
     setLoading(true);
     const formData = new FormData();
     Object.entries(order).forEach(([key, value]) => {
-      if (value) {
+      if (value !== undefined && value !== null && value !== "") {
         if (key === "ingredients") {
           formData.append("ingredients", JSON.stringify(value));
         } else if (key === "customImage" && value instanceof File) {
@@ -99,7 +145,7 @@ export default function CustomCakePage() {
           <span className="font-bold">{orderNumber}</span>
         </p>
       </div>
-    );
+    );  
   }
 
   return (
@@ -108,7 +154,7 @@ export default function CustomCakePage() {
         Створення кастомного торта
       </h1>
 
-      {/* Step 1 */}
+      {/* Step 1 — Основна інформація + інгредієнти */}
       {step === 1 && (
         <div className="bg-white p-6 rounded-2xl shadow-md space-y-4">
           <input
@@ -134,13 +180,29 @@ export default function CustomCakePage() {
           />
           <input
             type="number"
-            placeholder="Вага (кг)"
-            value={order.weight || ""}
+            placeholder="Кількість осіб"
+            value={order.persons || ""}
             onChange={(e) =>
-              setOrder({ ...order, weight: parseFloat(e.target.value) })
+              setOrder({ ...order, persons: parseInt(e.target.value) })
             }
             className="w-full p-3 border rounded-lg"
           />
+          <p className="text-gray-600">
+            Рекомендована вага:{" "}
+            <span className="font-semibold">{order.weight || "-"} кг</span>
+          </p>
+
+          <label className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={order.urgent}
+              onChange={(e) =>
+                setOrder({ ...order, urgent: e.target.checked })
+              }
+            />
+            <span>⚡ Срочне замовлення</span>
+          </label>
+
           <textarea
             placeholder="Коментар"
             value={order.comment}
@@ -156,26 +218,47 @@ export default function CustomCakePage() {
             className="w-full p-3 border rounded-lg"
           />
 
+          {/* Інгредієнти */}
           {!order.customImage && (
             <div>
-              <h2 className="font-semibold mb-2">Виберіть інгредієнти:</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                {ingredients.map((ing) => (
-                  <div
-                    key={ing.id}
-                    className={`border p-2 rounded cursor-pointer text-center ${
-                      order.ingredients.includes(ing.id)
-                        ? "bg-blue-100 border-blue-400"
-                        : "hover:bg-gray-100"
-                    }`}
-                    onClick={() => handleIngredientToggle(ing.id)}
-                  >
-                    <div className="font-semibold">{ing.name}</div>
-                    <div className="text-xs">{ing.type}</div>
-                    <div className="text-xs">{ing.price} грн</div>
+              <h2 className="font-semibold mb-4 text-lg">Інгредієнти торта</h2>
+              {(["BISCUIT", "SOAKING", "CREAM", "FILLING", "DECOR"] as IngredientType["type"][]).map(
+                (cat) => (
+                  <div key={cat} className="mb-6">
+                    <h3 className="font-bold text-pink-600 mb-2">
+                      {CATEGORY_LABELS[cat]}
+                    </h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                      {ingredients
+                        .filter((i) => i.type === cat)
+                        .map((ing) => {
+                          const selected = order.ingredients.includes(ing.id);
+                          return (
+                            <button
+                              key={ing.id}
+                              type="button"
+                              className={`border rounded-xl p-3 text-center transition-all ${
+                                selected
+                                  ? "bg-green-100 border-green-400 shadow-md"
+                                  : "hover:bg-gray-100"
+                              }`}
+                              onClick={() =>
+                                handleIngredientToggle(ing.id, ing.type)
+                              }
+                            >
+                              <div className="font-semibold">{ing.name}</div>
+                              {ing.price > 0 && (
+                                <div className="text-sm text-gray-600">
+                                  +{ing.price} грн
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
+                    </div>
                   </div>
-                ))}
-              </div>
+                )
+              )}
             </div>
           )}
 
@@ -188,7 +271,7 @@ export default function CustomCakePage() {
         </div>
       )}
 
-      {/* Step 2 */}
+      {/* Step 2 — Доставка */}
       {step === 2 && (
         <div className="bg-white p-6 rounded-2xl shadow-md space-y-4">
           <p className="font-semibold mb-1">Тип доставки:</p>
@@ -235,7 +318,7 @@ export default function CustomCakePage() {
         </div>
       )}
 
-      {/* Step 3 */}
+      {/* Step 3 — Оплата */}
       {step === 3 && (
         <div className="bg-white p-6 rounded-2xl shadow-md space-y-4">
           <p className="font-semibold mb-2">Спосіб оплати:</p>
