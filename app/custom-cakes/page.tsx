@@ -101,36 +101,36 @@ export default function CustomCakePage() {
   }, [order.persons]);
 
   // Submit
-  const submitOrder = async () => {
-    setLoading(true);
-    const formData = new FormData();
-    Object.entries(order).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== "") {
-        if (key === "ingredients") {
-          formData.append("ingredients", JSON.stringify(value));
-        } else if (key === "customImage" && value instanceof File) {
-          formData.append("customImage", value);
-        } else {
-          formData.append(key, String(value));
-        }
-      }
+const submitOrder = async () => {
+  setLoading(true);
+
+  try {
+    const res = await fetch("/api/custom-cakes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...order,
+        customImage: undefined, // бо файл ми не відправляємо JSON-ом
+      }),
     });
 
-    try {
-      const res = await fetch("/api/custom-cakes", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await res.json();
-      setOrderNumber(data.orderNumber || "невідомо");
-      setStep(4);
-    } catch (err) {
-      console.error(err);
-      alert("Помилка при оформленні замовлення");
-    } finally {
-      setLoading(false);
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.error || "Помилка при оформленні замовлення");
+      return;
     }
-  };
+
+    setOrderNumber(data.orderNumber || "невідомо");
+    setStep(4);
+  } catch (err) {
+    console.error(err);
+    alert("Помилка при оформленні замовлення");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // ================= RENDER =================
 

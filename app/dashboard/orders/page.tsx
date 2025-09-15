@@ -267,7 +267,7 @@ export default function AdminOrdersPage() {
                       {order.weight || "-"} {order.eventType || "-"}
                     </td>
                     <td className="p-2">
-                      {order.ingredients.map((i) => i.ingredient.name).join(", ") || "-"}
+                      {order?.ingredients.map((i) => i.ingredient?.name).join(", ") || "-"}
                     </td>
                     <td className="p-2">
                       {order.customImage ? (

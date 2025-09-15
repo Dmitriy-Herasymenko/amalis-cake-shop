@@ -36,6 +36,8 @@ model CustomCakeOrder {
   weight      Float?
   comment     String?
   customImage String?
+  address      String?
+  deliveryType DeliveryType?
   persons     Int?                           
   tiers       Int?                   
   totalPrice  Float?                 

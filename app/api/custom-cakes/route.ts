@@ -34,49 +34,51 @@ function calculatePrice(weightPrice: number, ingredients: { price: number }[], l
 // --- POST: створення кастомного торта ---
 export async function POST(req: Request) {
   try {
-    const formData = await req.formData();
+    const body = await req.json();
 
-    const name = formData.get("name")?.toString();
-    const phone = formData.get("phone")?.toString();
-    const eventType = formData.get("eventType")?.toString() || null;
-    const comment = formData.get("comment")?.toString() || null;
-    const layers = parseInt(formData.get("layers")?.toString() || "1");
-    const persons = parseInt(formData.get("persons")?.toString() || "1");
-    const weightInput = parseFloat(formData.get("weight")?.toString() || "1");
-
-    const customImageFile = formData.get("customImage") as File | null;
-
-    // --- Категорії інгредієнтів ---
-    const biscuitIds = JSON.parse(formData.get("biscuit")?.toString() || "[]"); // 1 варіант
-    const soakIds = JSON.parse(formData.get("soak")?.toString() || "[]");       // до 2 варіантів
-    const creamIds = JSON.parse(formData.get("cream")?.toString() || "[]");     // 1 варіант
-    const fillingIds = JSON.parse(formData.get("filling")?.toString() || "[]"); // до 3 варіантів
-    const decorIds = JSON.parse(formData.get("decor")?.toString() || "[]");     // декор
-
-    const allIngredientIds = [...biscuitIds, ...soakIds, ...creamIds, ...fillingIds, ...decorIds];
+    const {
+      name,
+      phone,
+      eventType,
+      comment,
+      tiers,
+      persons,
+      weight,
+      urgent,
+      address,
+      deliveryType,
+      ingredients = [],
+    } = body;
 
     // --- Перевірки ---
-    if (!name || !phone) return new Response("Ім'я та телефон обов'язкові", { status: 400 });
-    if (weightInput < 1) return new Response("Мінімальна вага 1 кг", { status: 400 });
-    if (biscuitIds.length !== 1) return new Response("Виберіть 1 варіант бісквіту", { status: 400 });
-    if (soakIds.length > 2) return new Response("Виберіть максимум 2 варіанти просочення", { status: 400 });
-    if (creamIds.length !== 1) return new Response("Виберіть 1 варіант крему", { status: 400 });
-    if (fillingIds.length > 3) return new Response("Виберіть максимум 3 варіанти начинки", { status: 400 });
-    if (allIngredientIds.length === 0) return new Response("Необхідно обрати інгредієнти", { status: 400 });
+    if (!name || !phone)
+      return Response.json({ error: "Ім'я та телефон обов'язкові" }, { status: 400 });
+    if (!Array.isArray(ingredients) || ingredients.length === 0)
+      return Response.json({ error: "Необхідно обрати інгредієнти" }, { status: 400 });
 
-    // --- Збереження картинки ---
-    let customImage: string | null = null;
-    if (customImageFile && customImageFile.size > 0) {
-      const buffer = Buffer.from(await customImageFile.arrayBuffer());
-      const filePath = path.join(UPLOAD_DIR, customImageFile.name);
-      await fs.writeFile(filePath, buffer);
-      customImage = `/uploads/custom-cakes/${customImageFile.name}`;
-    }
+    // --- Розбір по категоріях ---
+    const ingredientsData = await prisma.ingredient.findMany({
+      where: { id: { in: ingredients } },
+    });
+
+    const biscuits = ingredientsData.filter((i) => i.type === "BISCUIT");
+    const soakings = ingredientsData.filter((i) => i.type === "SOAKING");
+    const creams = ingredientsData.filter((i) => i.type === "CREAM");
+    const fillings = ingredientsData.filter((i) => i.type === "FILLING");
+
+    if (biscuits.length !== 1)
+      return Response.json({ error: "Виберіть 1 варіант бісквіту" }, { status: 400 });
+    if (soakings.length > 2)
+      return Response.json({ error: "Виберіть максимум 2 варіанти просочення" }, { status: 400 });
+    if (creams.length !== 1)
+      return Response.json({ error: "Виберіть 1 варіант крему" }, { status: 400 });
+    if (fillings.length > 3)
+      return Response.json({ error: "Виберіть максимум 3 варіанти начинки" }, { status: 400 });
 
     // --- Унікальний номер ---
     const orderNumber = await generateUniqueOrderNumber();
 
-    // --- Розрахунок ціни за кількість осіб ---
+    // --- Розрахунок ціни ---
     let weightPrice = 0;
     if (persons <= 5) weightPrice = 900;
     else if (persons <= 8) weightPrice = 1350;
@@ -86,43 +88,49 @@ export async function POST(req: Request) {
       weightPrice = calculatedWeight * 900;
     }
 
-    // --- Отримання даних інгредієнтів ---
-    const ingredientsData = await prisma.ingredient.findMany({
-      where: { id: { in: allIngredientIds } },
-    });
+    const totalPrice = calculatePrice(weightPrice, ingredientsData, tiers);
 
-    const totalPrice = calculatePrice(weightPrice, ingredientsData, layers);
+  const newOrder = await prisma.customCakeOrder.create({
+  data: {
+    name: body.name,
+    phone: body.phone,
+    eventType: body.eventType,
+    weight: body.weight,
+    comment: body.comment,
+    customImage: body.customImage,
+    persons: body.persons,
+    tiers: body.tiers,
+    totalPrice: totalPrice,
+    deliveryType: body.deliveryType , // якщо є в схемі
+    address: body.address,           // якщо є в схемі
+    rushOrder: body.rushOrder ?? false, // <-- замість urgent
+    status: "NEW",
+    ingredients: {
+      create: body.ingredients.map((id: number) => ({
+        ingredient: { connect: { id } },
+      })),
+    },
+  },
+});
 
-    // --- Створення замовлення ---
-    const newOrder = await prisma.customCakeOrder.create({
-      data: {
-        name,
-        phone,
-        eventType,
-        weight: weightInput,
-        comment,
-        customImage,
-        orderNumber,
-        status: OrderStatus.NEW,
-        totalPrice,
-        persons,
-        tiers: layers,
-      },
-    });
 
     // --- Прив'язка інгредієнтів ---
-    for (const id of allIngredientIds) {
+    for (const id of ingredients) {
       await prisma.customCakeIngredient.create({
         data: { customCakeOrderId: newOrder.id, ingredientId: id },
       });
     }
 
-    return new Response(JSON.stringify(newOrder), { status: 200 });
+    return Response.json(newOrder, { status: 200 });
   } catch (e: any) {
     console.error("POST /api/custom-cakes error:", e);
-    return new Response(e.message || "Помилка створення замовлення", { status: 500 });
+    return Response.json(
+      { error: e.message || "Помилка створення замовлення" },
+      { status: 500 }
+    );
   }
 }
+
 
 // --- GET: всі замовлення ---
 export async function GET() {
