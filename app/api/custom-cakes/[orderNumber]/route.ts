@@ -1,19 +1,23 @@
-// app/api/custom-cakes/[orderNumber]/route.ts
 import { prisma } from "@/app/lib/prisma";
+import { NextRequest, NextResponse } from "next/server";
 
-interface Params {
-  params: { orderNumber: string };
-}
-
-export async function GET(_req: Request, { params }: Params) {
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ orderNumber: string }> }
+): Promise<NextResponse> {
   try {
-    const orderNumber = Number(params.orderNumber);
-    if (isNaN(orderNumber)) {
-      return new Response("Некоректний номер замовлення", { status: 400 });
+    const { orderNumber } = await params;
+    const orderNumberNum = Number(orderNumber);
+
+    if (isNaN(orderNumberNum)) {
+      return NextResponse.json(
+        { message: "Некоректний номер замовлення" },
+        { status: 400 }
+      );
     }
 
     const order = await prisma.customCakeOrder.findUnique({
-      where: { orderNumber },
+      where: { orderNumber: orderNumberNum },
       include: {
         ingredients: {
           include: {
@@ -24,18 +28,14 @@ export async function GET(_req: Request, { params }: Params) {
     });
 
     if (!order) {
-      return new Response("Замовлення не знайдено", { status: 404 });
+      return NextResponse.json({ message: "Замовлення не знайдено" }, { status: 404 });
     }
 
-    return new Response(JSON.stringify(order), {
-      headers: { "Content-Type": "application/json" },
-      status: 200,
-    });
+    return NextResponse.json(order, { status: 200 });
   } catch (error: unknown) {
-
-    if (error instanceof Error) {
-      return new Response(error.message || "Помилка отримання замовлення", { status: 500 });
-    }
-
+    return NextResponse.json(
+      { message: error instanceof Error ? error.message : "Помилка отримання замовлення" },
+      { status: 500 }
+    );
   }
 }
