@@ -41,8 +41,11 @@ export async function POST(req: Request) {
     });
 
     return new Response(JSON.stringify(cake), { status: 200 });
-  } catch (e: any) {
-    return new Response(e.message || "Error creating cake", { status: 500 });
+  } catch (e: unknown) {
+    if (e instanceof Error) {
+      return new Response(e.message || "Error creating cake", { status: 500 });
+    }
+
   }
 }
 

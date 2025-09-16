@@ -49,8 +49,11 @@ export default function TrackOrderPage() {
 
       // Типобезпечне приведення: API вже повертає поле type
       setOrder(data as OrderInfo);
-    } catch (err: any) {
-      setError(err.message || "Помилка при отриманні замовлення");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message || "Помилка при отриманні замовлення");
+      }
+
     } finally {
       setLoading(false);
     }

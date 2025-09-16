@@ -96,28 +96,28 @@ export async function POST(req: Request) {
 
     const totalPrice = calculatePrice(weightPrice, ingredientsData, tiers);
 
-  const newOrder = await prisma.customCakeOrder.create({
-  data: {
-    name: body.name,
-    phone: body.phone,
-    eventType: body.eventType,
-    weight: body.weight,
-    comment: body.comment,
-    customImage: body.customImage,
-    persons: body.persons,
-    tiers: body.tiers,
-    totalPrice: totalPrice,
-    deliveryType: body.deliveryType , // якщо є в схемі
-    address: body.address,           // якщо є в схемі
-    rushOrder: body.rushOrder ?? false, // <-- замість urgent
-    status: "NEW",
-    ingredients: {
-      create: body.ingredients.map((id: number) => ({
-        ingredient: { connect: { id } },
-      })),
-    },
-  },
-});
+    const newOrder = await prisma.customCakeOrder.create({
+      data: {
+        name: body.name,
+        phone: body.phone,
+        eventType: body.eventType,
+        weight: body.weight,
+        comment: body.comment,
+        customImage: body.customImage,
+        persons: body.persons,
+        tiers: body.tiers,
+        totalPrice: totalPrice,
+        deliveryType: body.deliveryType, // якщо є в схемі
+        address: body.address,           // якщо є в схемі
+        rushOrder: body.rushOrder ?? false, // <-- замість urgent
+        status: "NEW",
+        ingredients: {
+          create: body.ingredients.map((id: number) => ({
+            ingredient: { connect: { id } },
+          })),
+        },
+      },
+    });
 
 
     // --- Прив'язка інгредієнтів ---
@@ -128,12 +128,14 @@ export async function POST(req: Request) {
     }
 
     return Response.json(newOrder, { status: 200 });
-  } catch (e: any) {
-    console.error("POST /api/custom-cakes error:", e);
-    return Response.json(
-      { error: e.message || "Помилка створення замовлення" },
-      { status: 500 }
-    );
+  } catch (e: unknown) {
+    if (e instanceof Error) {
+      return Response.json(
+        { error: e.message || "Помилка створення замовлення" },
+        { status: 500 }
+      );
+    }
+
   }
 }
 
@@ -157,9 +159,12 @@ export async function GET() {
     }));
 
     return new Response(JSON.stringify(formatted), { status: 200 });
-  } catch (e: any) {
-    console.error("GET /api/custom-cakes error:", e);
-    return new Response(e.message || "Помилка отримання замовлень", { status: 500 });
+  } catch (e: unknown) {
+
+    if (e instanceof Error) {
+      return new Response(e.message || "Помилка отримання замовлень", { status: 500 });
+    }
+
   }
 }
 
@@ -175,8 +180,10 @@ export async function PUT(req: Request) {
     });
 
     return new Response(JSON.stringify(updatedOrder), { status: 200 });
-  } catch (e: any) {
-    console.error("PUT /api/custom-cakes error:", e);
-    return new Response(e.message || "Помилка оновлення замовлення", { status: 500 });
+  } catch (e: unknown) {
+    if (e instanceof Error) {
+      return new Response(e.message || "Помилка оновлення замовлення", { status: 500 });
+    }
+
   }
 }

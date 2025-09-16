@@ -36,6 +36,8 @@ type CustomOrder = {
   updatedAt: string;
 };
 
+type Tab = "NEW" | "PROCESSING" | "COMPLETED";
+
 const STATUS_OPTIONS: (Order["status"] | CustomOrder["status"])[] = [
   "NEW",
   "PROCESSING",
@@ -43,10 +45,12 @@ const STATUS_OPTIONS: (Order["status"] | CustomOrder["status"])[] = [
   "COMPLETED",
 ];
 
+
+
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [customOrders, setCustomOrders] = useState<CustomOrder[]>([]);
-  const [activeTab, setActiveTab] = useState<"NEW" | "PROCESSING" | "COMPLETED">("NEW");
+  const [activeTab, setActiveTab] = useState<Tab>("NEW");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -138,7 +142,7 @@ export default function AdminOrdersPage() {
 
       {/* Tabs */}
       <div className="flex space-x-4 mb-6">
-        {["NEW", "PROCESSING", "COMPLETED"].map((tab) => (
+        {(["NEW", "PROCESSING", "COMPLETED"] as Tab[]).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab as any)}
@@ -156,11 +160,11 @@ export default function AdminOrdersPage() {
       ) : (
         <>
     {/* Звичайні замовлення */}
-{filteredOrders.length > 0 && (
+{filteredOrders?.length > 0 && (
   <table className="w-full bg-white rounded-lg shadow-md overflow-hidden mb-6">
     <thead className="bg-gray-100">
       <tr>
-        <th className="p-2">Ім'я</th>
+        <th className="p-2">{"Ім'я"}</th>
         <th className="p-2">Телефон</th>
         <th className="p-2">Адреса</th>
         <th className="p-2">Товари</th>
@@ -191,7 +195,7 @@ export default function AdminOrdersPage() {
                   if (acc[item.id]) {
                     acc[item.id].quantity += 1;
                   } else {
-                    acc[item.id] = { name: item.name, quantity: 1, price: item.price };
+                    acc[item.id] = { name: item.name, quantity: 1, price: item.price ?? 0 };
                   }
                   return acc;
                 },
@@ -247,7 +251,7 @@ export default function AdminOrdersPage() {
             <table className="w-full bg-white rounded-lg shadow-md overflow-hidden" >
               <thead className="bg-gray-100">
                 <tr>
-                  <th className="p-2">Ім'я</th>
+                  <th className="p-2">{"Ім'я"}</th>
                   <th className="p-2">Телефон</th>
                   <th className="p-2">Вага/Тип</th>
                   <th className="p-2">Інгредієнти</th>
