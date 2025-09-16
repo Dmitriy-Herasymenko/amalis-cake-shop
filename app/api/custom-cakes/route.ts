@@ -76,7 +76,7 @@ export async function POST(req: Request) {
       return Response.json({ error: "Виберіть максимум 3 варіанти начинки" }, { status: 400 });
 
     // --- Унікальний номер ---
-    const orderNumber = await generateUniqueOrderNumber();
+    // const orderNumber = await generateUniqueOrderNumber();
 
     // --- Розрахунок ціни ---
     let weightPrice = 0;

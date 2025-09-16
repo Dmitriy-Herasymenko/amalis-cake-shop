@@ -1,5 +1,6 @@
 "use client";
 import { useCartStore } from "@/store/cartStore";
+import Image from "next/image";
 
 interface Cake {
   id: number;
@@ -29,7 +30,7 @@ export default function CakesList({ cakes }: { cakes: Cake[] }) {
                   NEW
                 </span>
               )}
-              <img
+              <Image
                 src={cake.imageUrl}
                 alt={cake.name}
                 className="w-full h-56 object-cover"
