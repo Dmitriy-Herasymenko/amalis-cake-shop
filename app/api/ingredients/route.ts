@@ -6,8 +6,11 @@ export async function GET() {
       orderBy: { createdAt: "asc" },
     });
     return new Response(JSON.stringify(ingredients), { status: 200 });
-  } catch (e: any) {
-    console.error(e);
-    return new Response(e.message || "Error fetching ingredients", { status: 500 });
+  } catch (e: unknown) {
+        if (e instanceof Error) { 
+           return new Response(e.message || "Error fetching ingredients", { status: 500 });
+        }
+
+   
   }
 }

@@ -7,6 +7,13 @@ interface Params {
 
 type OrderStatus = "NEW" | "PROCESSING" | "DELIVERING" | "COMPLETED";
 
+type OrderItem = {
+  cakeId: number;        // id конкретного торта з таблиці Cake
+  name: string;          // назва торта (на момент замовлення)
+  price: number;         // ціна за одиницю
+  quantity: number;      // кількість
+};
+
 // Тип для звичайного замовлення
 type NormalOrder = {
   type: "regular";
@@ -14,7 +21,7 @@ type NormalOrder = {
   status: OrderStatus;
   paid: boolean;
   totalPrice: number;
-  items: any;
+  items: OrderItem[];
   name: string;
   phone: string;
   address: string | null;
@@ -41,8 +48,7 @@ type CustomOrder = {
   }[];
 };
 
-// Union тип
-type OrderResponse = NormalOrder | CustomOrder;
+
 
 export async function GET(_req: Request, { params }: Params) {
   const orderNumber = Number(params.orderNumber);
@@ -70,7 +76,7 @@ export async function GET(_req: Request, { params }: Params) {
     });
 
     if (normalOrder) {
-      const response: NormalOrder = { ...normalOrder, type: "regular" };
+      const response: NormalOrder = { ...normalOrder, type: "regular", items: normalOrder.items as OrderItem[], };
       return new Response(JSON.stringify(response), {
         headers: { "Content-Type": "application/json" },
       });
@@ -116,10 +122,12 @@ export async function GET(_req: Request, { params }: Params) {
 
     // 3️⃣ Якщо нічого не знайдено
     return new Response("Замовлення не знайдено", { status: 404 });
-  } catch (error: any) {
-    console.error("GET /api/orders/[orderNumber] error:", error);
-    return new Response(error.message || "Помилка отримання замовлення", {
-      status: 500,
-    });
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      return new Response(error.message || "Помилка отримання замовлення", {
+        status: 500,
+      });
+    }
+
   }
 }

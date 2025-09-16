@@ -2,7 +2,6 @@
 import { prisma } from "@/app/lib/prisma";
 import fs from "fs/promises";
 import path from "path";
-import { OrderStatus, IngredientType } from "@prisma/client";
 
 export const config = { api: { bodyParser: false } };
 
@@ -23,13 +22,20 @@ async function generateUniqueOrderNumber(): Promise<number> {
 }
 
 // --- допоміжна функція для розрахунку ціни ---
-function calculatePrice(weightPrice: number, ingredients: { price: number }[], layers: number) {
-  let ingredientsPrice = ingredients.reduce((sum, ing) => sum + ing.price, 0);
+function calculatePrice(
+  weightPrice: number,
+  ingredients: { price: number }[],
+  layers: number
+): number {
+  const ingredientsPrice = ingredients.reduce((sum, ing) => sum + ing.price, 0);
   let decorPrice = 0;
+
   if (layers === 2) decorPrice = 200;
   if (layers === 3) decorPrice = 400;
+
   return weightPrice + ingredientsPrice + decorPrice;
 }
+
 
 // --- POST: створення кастомного торта ---
 export async function POST(req: Request) {

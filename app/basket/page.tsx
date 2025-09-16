@@ -7,7 +7,7 @@ import { useState } from "react";
 export default function BasketPage() {
   const { cart, removeFromCart, updateQuantity, clearCart } = useCartStore();
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState<any>({});
+  const [formData, setFormData] = useState({});
   const [paymentMethod, setPaymentMethod] = useState<string>("");
   const [orderDone, setOrderDone] = useState(false);
   const [loading, setLoading] = useState(false);

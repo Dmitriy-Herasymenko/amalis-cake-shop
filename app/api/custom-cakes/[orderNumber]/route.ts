@@ -31,8 +31,11 @@ export async function GET(_req: Request, { params }: Params) {
       headers: { "Content-Type": "application/json" },
       status: 200,
     });
-  } catch (error: any) {
-    console.error("GET /api/custom-cakes/[orderNumber] error:", error);
-    return new Response(error.message || "Помилка отримання замовлення", { status: 500 });
+  } catch (error: unknown) {
+
+    if (error instanceof Error) {
+      return new Response(error.message || "Помилка отримання замовлення", { status: 500 });
+    }
+
   }
 }

@@ -14,8 +14,8 @@ export async function POST(req: Request) {
 
     const callBackBool = callBack === "on" || callBack === true;
 
-const orderNumber = Math.floor(100000 + Math.random() * 900000); // число
-   let storeConnect;
+    const orderNumber = Math.floor(100000 + Math.random() * 900000); // число
+    let storeConnect;
     if (deliveryType === "PICKUP" && store) {
       const storeRecord = await prisma.store.findUnique({ where: { name: store } });
       if (storeRecord) {
@@ -42,9 +42,11 @@ const orderNumber = Math.floor(100000 + Math.random() * 900000); // число
 
     console.log("Order created:", order);
     return new Response(JSON.stringify(order), { status: 200 });
-  } catch (e: any) {
-    console.error("POST /api/orders error:", e);
-    return new Response(e.message || "Error creating order", { status: 500 });
+  } catch (e: unknown) {
+    if (e instanceof Error) {
+      return new Response(e.message || "Error creating order", { status: 500 });
+    }
+
   }
 }
 
@@ -55,12 +57,14 @@ export async function GET() {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
-  } catch (e: any) {
-    console.error("GET /api/orders error:", e);
-    return new Response(JSON.stringify({ error: e.message || "Error fetching orders" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+  } catch (e: unknown) {
+    if (e instanceof Error) {
+      return new Response(JSON.stringify({ error: e.message || "Error fetching orders" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
   }
 }
 
@@ -75,7 +79,10 @@ export async function PUT(req: Request) {
     });
 
     return new Response(JSON.stringify(updatedOrder), { status: 200 });
-  } catch (e: any) {
-    return new Response(e.message || "Error updating order", { status: 500 });
+  } catch (e: unknown) {
+    if (e instanceof Error) {
+      return new Response(e.message || "Error updating order", { status: 500 });
+    }
+
   }
 }

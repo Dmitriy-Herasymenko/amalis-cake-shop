@@ -51,10 +51,14 @@ export async function GET() {
   try {
     const cakes = await prisma.cake.findMany();
     return new Response(JSON.stringify(cakes), { status: 200 });
-  } catch (e: any) {
-    return new Response(e.message || "Error fetching cakes", { status: 500 });
+  } catch (e: unknown) {
+    if (e instanceof Error) {
+      return new Response(e.message, { status: 500 });
+    }
+    return new Response("Error fetching cakes", { status: 500 });
   }
 }
+
 
 // --- DELETE: видалити торт за id ---
 export async function DELETE(req: Request) {
@@ -65,8 +69,11 @@ export async function DELETE(req: Request) {
   try {
     await prisma.cake.delete({ where: { id: parseInt(id) } });
     return new Response("Deleted", { status: 200 });
-  } catch (e: any) {
-    return new Response(e.message || "Error deleting cake", { status: 500 });
+  } catch (e: unknown) {
+    if (e instanceof Error) {
+      return new Response(e.message || "Error deleting cake", { status: 500 });
+    }
+
   }
 }
 
@@ -87,7 +94,11 @@ export async function PUT(req: Request) {
     });
 
     return new Response(JSON.stringify(cake), { status: 200 });
-  } catch (e: any) {
-    return new Response(e.message || "Error updating cake", { status: 500 });
+  } catch (e: unknown) {
+
+    if (e instanceof Error) {
+      return new Response(e.message || "Error updating cake", { status: 500 });
+    }
+
   }
 }
