@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
+import Image from "next/image";
 
 type OrderItem = {
   id: number;
@@ -165,7 +166,7 @@ function renderCustomOrder(order: CustomOrder) {
       </div>
 
       {order.customImage && (
-        <img
+        <Image
           src={order.customImage}
           alt="Custom Cake"
           className="w-64 h-64 object-cover rounded-lg shadow"

@@ -10,15 +10,15 @@ interface Cake {
 }
 
 export default function CakesList({ cakes }: { cakes: Cake[] }) {
-  const { cart, addToCart } = useCartStore();
-  const total = cart.reduce((sum, item) => sum + item.price, 0);
+  const { addToCart } = useCartStore();
+
   return (
     <div className="min-h-screen  ">
 
       {/* Список тортів */}
       <div className="px-6 md:px-20 py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-10">
-          {cakes.map((cake, idx) => (
+          {cakes.map((cake:Cake, idx) => (
             <div
               key={cake.id}
               className="relative rounded-[12px] shadow-xl overflow-hidden  "
@@ -48,7 +48,7 @@ export default function CakesList({ cakes }: { cakes: Cake[] }) {
                     {cake.price} грн
                   </span>
                   <button
-                    onClick={() => addToCart(cake)}
+                    onClick={() => addToCart({ ...cake, quantity: 1 })}
                     className="bg-[#B17F44] cursor-pointer text-white px-4 py-2 rounded-xl shadow-md hover:bg-inherit hover:border-[1px] hover:border-black hover:text-black active:scale-95 transition"
                   >
                     Купити

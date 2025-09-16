@@ -45,14 +45,8 @@ export async function POST(req: Request) {
     const {
       name,
       phone,
-      eventType,
-      comment,
       tiers,
       persons,
-      weight,
-      urgent,
-      address,
-      deliveryType,
       ingredients = [],
     } = body;
 

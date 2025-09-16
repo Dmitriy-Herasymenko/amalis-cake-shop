@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 
 type OrderStatus = "NEW" | "PROCESSING" | "DELIVERING" | "COMPLETED";
 
@@ -158,7 +159,7 @@ export default function TrackOrderPage() {
           {order.customImage && (
             <div className="mt-3">
               <strong>Ескіз:</strong>
-              <img
+              <Image
                 src={order.customImage}
                 alt="Custom cake"
                 className="mt-2 rounded shadow max-h-48 object-contain"

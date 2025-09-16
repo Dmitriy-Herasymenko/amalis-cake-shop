@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { Icons } from "../components/Icons";
 import { useCartStore } from "@/store/cartStore";
 import { usePathname } from "next/navigation";
 

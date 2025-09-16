@@ -1,21 +1,58 @@
+import { prisma } from "@/app/lib/prisma";
 
-import { PrismaClient } from "@prisma/client";
-import { NextResponse } from "next/server";
+export async function GET(req: Request, context: any) {
+  const { params } = context;
+  const orderNumber = Number(params.orderNumber);
 
-const prisma = new PrismaClient();
+  if (isNaN(orderNumber)) {
+    return new Response("Некоректний номер замовлення", { status: 400 });
+  }
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
-  const body = await req.json();
-  const cake = await prisma.cake.update({
-    where: { id: parseInt(params.id) },
-    data: body,
-  });
-  return NextResponse.json(cake);
-}
+  try {
+    // Шукаємо кастомне замовлення
+    const customOrder = await prisma.customCakeOrder.findUnique({
+      where: { orderNumber },
+      select: {
+        orderNumber: true,
+        status: true,
+        name: true,
+        phone: true,
+        eventType: true,
+        weight: true,
+        comment: true,
+        customImage: true,
+        createdAt: true,
+        ingredients: {
+          select: {
+            id: true,
+            ingredient: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
-  await prisma.cake.delete({
-    where: { id: parseInt(params.id) },
-  }); 
-  return NextResponse.json({ message: "Deleted" });
+    if (!customOrder) {
+      return new Response("Замовлення не знайдено", { status: 404 });
+    }
+
+    // Формуємо інгредієнти
+    const ingredients = customOrder.ingredients.map((ing) => ({
+      id: ing.ingredient.id,
+      name: ing.ingredient.name,
+    }));
+
+    return new Response(JSON.stringify({ ...customOrder, ingredients }), {
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      return new Response(err.message, { status: 500 });
+    }
+    return new Response("Помилка сервера", { status: 500 });
+  }
 }

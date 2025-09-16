@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 
 type Order = {
@@ -275,7 +276,7 @@ export default function AdminOrdersPage() {
                     </td>
                     <td className="p-2">
                       {order.customImage ? (
-                        <img
+                        <Image
                           src={order.customImage}
                           alt="custom cake"
                           className="w-24 h-24 object-cover"

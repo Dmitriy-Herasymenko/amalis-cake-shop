@@ -81,7 +81,7 @@ function PopularSection() {
                             key={cake.id}
                             className="bg-white  overflow-hidden shadow-md hover:scale-105 transition-transform"
                         >
-                            <img
+                            <Image
                                 src={cake.image}
                                 alt={cake.name}
                                 className="w-full h-60 object-cover"
@@ -127,7 +127,7 @@ function About() {
 
                 className=" flex gap-12 "
             >
-                <img
+                <Image
                     src={"https://images.unsplash.com/photo-1517427294546-5aa121f68e8a?q=80&w=928&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"}
                     alt={"photo"}
                     className="max-w-[1200px] h-140 object-cover"
@@ -170,7 +170,7 @@ function ContactUs() {
                     </div>
 
                 </div>
-                <img
+                <Image
                     src={"https://www.kypur.net/wp-content/uploads/2024/08/fb.-brenduvannya1.jpg"}
                     alt={"photo"}
                     className="max-w-[1200px] h-140 object-cover"

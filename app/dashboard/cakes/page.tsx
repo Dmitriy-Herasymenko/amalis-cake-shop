@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
+import Image from "next/image";
 
 type CakeType = {
   id: number;
@@ -123,7 +124,7 @@ export default function CakesPage() {
           {cakes.map((cake) => (
             <tr key={cake.id} className="bg-white hover:bg-pink-50">
               <td className="border p-1">
-                <img src={cake.imageUrl} alt={cake.name} className="w-full h-20 object-cover  mx-auto" />
+                <Image src={cake.imageUrl} alt={cake.name} className="w-full h-20 object-cover  mx-auto" />
               </td>
               <td className="border p-2">
                 <input
