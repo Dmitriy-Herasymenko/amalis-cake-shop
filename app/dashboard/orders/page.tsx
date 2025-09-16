@@ -145,7 +145,7 @@ export default function AdminOrdersPage() {
         {(["NEW", "PROCESSING", "COMPLETED"] as Tab[]).map((tab) => (
           <button
             key={tab}
-            onClick={() => setActiveTab(tab as any)}
+            onClick={() => setActiveTab(tab)}
             className={`px-4 py-2 rounded-lg font-semibold ${
               activeTab === tab ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700"
             }`}

@@ -4,7 +4,7 @@ import Link from 'next/link'
 export function Sidebar() {
     return (
         <aside className="w-48 my-12 ml-12 bg-white shadow-xl rounded-2xl p-8 flex flex-col">
-            <h2 className="text-l font-bold mb-10 text-[#AA824D] text-center">Amali's Panel</h2>
+            <h2 className="text-l font-bold mb-10 text-[#AA824D] text-center">{`Amali's Panel`}</h2>
             <nav className="flex flex-col gap-2 items-center text-xs">
                 <Link
                     href="/dashboard"
