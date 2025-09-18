@@ -1,30 +1,24 @@
 import { prisma } from "@/app/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: Promise<{ orderNumber: string }> }
-): Promise<NextResponse> {
+export async function GET(req: NextRequest) {
+  // Використовуємо URLSearchParams для отримання orderNumber з query
+  const url = new URL(req.url);
+  const orderNumber = url.searchParams.get("orderNumber");
+
+  if (!orderNumber) {
+    return NextResponse.json({ message: "Номер замовлення не вказаний" }, { status: 400 });
+  }
+
+  const orderNumberNum = Number(orderNumber);
+  if (isNaN(orderNumberNum)) {
+    return NextResponse.json({ message: "Некоректний номер замовлення" }, { status: 400 });
+  }
+
   try {
-    const { orderNumber } = await params;
-    const orderNumberNum = Number(orderNumber);
-
-    if (isNaN(orderNumberNum)) {
-      return NextResponse.json(
-        { message: "Некоректний номер замовлення" },
-        { status: 400 }
-      );
-    }
-
     const order = await prisma.customCakeOrder.findUnique({
       where: { orderNumber: orderNumberNum },
-      include: {
-        ingredients: {
-          include: {
-            ingredient: true,
-          },
-        },
-      },
+      include: { ingredients: { include: { ingredient: true } } },
     });
 
     if (!order) {

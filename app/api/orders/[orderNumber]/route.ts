@@ -1,20 +1,15 @@
-// app/api/orders/[orderNumber]/route.ts
+// app/api/orders/route.ts
 import { prisma } from "@/app/lib/prisma";
-
-interface Params {
-  params: { orderNumber: string };
-}
 
 type OrderStatus = "NEW" | "PROCESSING" | "DELIVERING" | "COMPLETED";
 
 type OrderItem = {
-  cakeId: number;        // id конкретного торта з таблиці Cake
-  name: string;          // назва торта (на момент замовлення)
-  price: number;         // ціна за одиницю
-  quantity: number;      // кількість
+  cakeId: number;
+  name: string;
+  price: number;
+  quantity: number;
 };
 
-// Тип для звичайного замовлення
 type NormalOrder = {
   type: "regular";
   orderNumber: number;
@@ -30,7 +25,6 @@ type NormalOrder = {
   createdAt: Date;
 };
 
-// Тип для кастомного замовлення
 type CustomOrder = {
   type: "custom";
   orderNumber: number;
@@ -48,10 +42,22 @@ type CustomOrder = {
   }[];
 };
 
+type CustomIngredient = {
+  ingredient: {
+    id: number;
+    name: string;
+  };
+};
 
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const orderNumberStr = url.searchParams.get("orderNumber");
 
-export async function GET(_req: Request, { params }: Params) {
-  const orderNumber = Number(params.orderNumber);
+  if (!orderNumberStr) {
+    return new Response("Номер замовлення не вказаний", { status: 400 });
+  }
+
+  const orderNumber = Number(orderNumberStr);
   if (isNaN(orderNumber)) {
     return new Response("Некоректний номер замовлення", { status: 400 });
   }
@@ -76,13 +82,17 @@ export async function GET(_req: Request, { params }: Params) {
     });
 
     if (normalOrder) {
-      const response: NormalOrder = { ...normalOrder, type: "regular", items: normalOrder.items as OrderItem[], };
+      const response: NormalOrder = {
+        ...normalOrder,
+        type: "regular",
+        items: normalOrder.items as OrderItem[],
+      };
       return new Response(JSON.stringify(response), {
         headers: { "Content-Type": "application/json" },
       });
     }
 
-    // 2️⃣ Якщо не знайдено — шукаємо кастомний торт
+    // 2️⃣ Шукаємо кастомне замовлення
     const customOrder = await prisma.customCakeOrder.findUnique({
       where: { orderNumber },
       select: {
@@ -98,19 +108,14 @@ export async function GET(_req: Request, { params }: Params) {
         ingredients: {
           select: {
             id: true,
-            ingredient: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
+            ingredient: { select: { id: true, name: true } },
           },
         },
       },
     });
 
     if (customOrder) {
-      const ingredients = customOrder.ingredients.map((ing) => ({
+      const ingredients = customOrder.ingredients.map((ing:CustomIngredient) => ({
         id: ing.ingredient.id,
         name: ing.ingredient.name,
       }));
@@ -120,14 +125,11 @@ export async function GET(_req: Request, { params }: Params) {
       });
     }
 
-    // 3️⃣ Якщо нічого не знайдено
     return new Response("Замовлення не знайдено", { status: 404 });
   } catch (error: unknown) {
-    if (error instanceof Error) {
-      return new Response(error.message || "Помилка отримання замовлення", {
-        status: 500,
-      });
-    }
-
+    return new Response(
+      error instanceof Error ? error.message : "Помилка отримання замовлення",
+      { status: 500 }
+    );
   }
 }

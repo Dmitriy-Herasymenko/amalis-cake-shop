@@ -3,23 +3,53 @@ import { prisma } from "@/app/lib/prisma";
 import fs from "fs/promises";
 import path from "path";
 
+type Ingredient = {
+  id: number;
+  name: string;
+  type: "BISCUIT" | "SOAKING" | "CREAM" | "FILLING";
+  price: number;
+};
+
+type CustomCakeOrderWithIngredients = {
+  id: number;
+  orderNumber: number;
+  status: string;
+  name: string;
+  phone: string;
+  eventType?: string | null;
+  weight?: number | null;
+  comment?: string | null;
+  customImage?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  ingredients: {
+    ingredient: {
+      id: number;
+      name: string;
+      type: string;
+      price: number;
+    };
+  }[];
+};
+
+
 export const config = { api: { bodyParser: false } };
 
 const UPLOAD_DIR = path.join(process.cwd(), "public/uploads/custom-cakes");
 fs.mkdir(UPLOAD_DIR, { recursive: true }).catch(console.error);
 
 // --- допоміжна функція для унікального номера ---
-async function generateUniqueOrderNumber(): Promise<number> {
-  let number: number;
-  while (true) {
-    number = Math.floor(100000 + Math.random() * 900000);
-    const exists = await prisma.customCakeOrder.findUnique({
-      where: { orderNumber: number },
-    });
-    if (!exists) break;
-  }
-  return number;
-}
+// async function generateUniqueOrderNumber(): Promise<number> {
+//   let number: number;
+//   while (true) {
+//     number = Math.floor(100000 + Math.random() * 900000);
+//     const exists = await prisma.customCakeOrder.findUnique({
+//       where: { orderNumber: number },
+//     });
+//     if (!exists) break;
+//   }
+//   return number;
+// }
 
 // --- допоміжна функція для розрахунку ціни ---
 function calculatePrice(
@@ -61,11 +91,18 @@ export async function POST(req: Request) {
       where: { id: { in: ingredients } },
     });
 
-    const biscuits = ingredientsData.filter((i) => i.type === "BISCUIT");
-    const soakings = ingredientsData.filter((i) => i.type === "SOAKING");
-    const creams = ingredientsData.filter((i) => i.type === "CREAM");
-    const fillings = ingredientsData.filter((i) => i.type === "FILLING");
-
+const biscuits = ingredientsData.filter(
+  (i): i is (typeof i & { type: Ingredient }) => i.type === "BISCUIT"
+);
+const soakings = ingredientsData.filter(
+  (i): i is (typeof i & { type: Ingredient }) => i.type === "SOAKING"
+);
+const creams = ingredientsData.filter(
+  (i): i is (typeof i & { type: Ingredient }) => i.type === "CREAM"
+);
+const fillings = ingredientsData.filter(
+  (i): i is (typeof i & { type: Ingredient }) => i.type === "FILLING"
+);
     if (biscuits.length !== 1)
       return Response.json({ error: "Виберіть 1 варіант бісквіту" }, { status: 400 });
     if (soakings.length > 2)
@@ -142,7 +179,7 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
     });
 
-    const formatted = orders.map((o) => ({
+    const formatted = orders.map((o:CustomCakeOrderWithIngredients) => ({
       ...o,
       ingredients: o.ingredients.map((ing) => ({
         id: ing.ingredient.id,

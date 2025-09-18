@@ -1,5 +1,14 @@
 import { prisma } from "@/app/lib/prisma";
 
+type CustomOrderIngredient = {
+  id: number;
+  ingredient: {
+    id: number;
+    name: string;
+  };
+};
+
+
 export async function GET(req: Request) {
   try {
     // Отримуємо orderNumber з URL
@@ -45,7 +54,7 @@ export async function GET(req: Request) {
     }
 
     // Формуємо масив інгредієнтів
-    const ingredients = customOrder.ingredients.map((ing) => ({
+    const ingredients = customOrder.ingredients.map((ing:CustomOrderIngredient) => ({
       id: ing.ingredient.id,
       name: ing.ingredient.name,
     }));

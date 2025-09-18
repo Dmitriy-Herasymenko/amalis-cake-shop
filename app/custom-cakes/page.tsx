@@ -91,14 +91,19 @@ export default function CustomCakePage() {
   };
 
   // Розрахунок ваги по кількості осіб
-  useEffect(() => {
-    if (order.persons) {
-      if (order.persons <= 5) setOrder((p) => ({ ...p, weight: 1 }));
-      else if (order.persons <= 8) setOrder((p) => ({ ...p, weight: 1.5 }));
-      else if (order.persons <= 12) setOrder((p) => ({ ...p, weight: 2 }));
-      else setOrder((p) => ({ ...p, weight: +(order.persons * 0.18).toFixed(1) }));
-    }
-  }, [order.persons]);
+useEffect(() => {
+  if (order.persons) {
+    if (order.persons <= 5) setOrder((p) => ({ ...p, weight: 1 }));
+    else if (order.persons <= 8) setOrder((p) => ({ ...p, weight: 1.5 }));
+    else if (order.persons <= 12) setOrder((p) => ({ ...p, weight: 2 }));
+    else
+      setOrder((p) => ({
+        ...p,
+        weight: +((order.persons ?? 0) * 0.18).toFixed(1),
+      }));
+  }
+}, [order.persons]);
+
 
   // Submit
 const submitOrder = async () => {
