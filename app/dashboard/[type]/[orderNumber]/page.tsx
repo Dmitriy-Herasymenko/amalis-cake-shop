@@ -1,80 +1,76 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { use, useEffect, useState } from "react";
 import Image from "next/image";
 
+interface PageProps {
+  params: Promise<{ orderNumber: string }>;
+}
+
+type OrderStatus = "NEW" | "PROCESSING" | "DELIVERING" | "COMPLETED";
+
 type OrderItem = {
-  id: number;
+  cakeId: number;
   name: string;
   price: number;
+  quantity: number;
+  imageUrl?: string;
 };
 
-type Ingredient = {
-  id: number;
-  ingredientId: number;
-  ingredient: {
-    id: number;
-    name: string;
-    type: string;
-    price: number;
-  };
-};
-
-type StandardOrder = {
+type NormalOrder = {
+  type: "regular";
   orderNumber: number;
+  status: OrderStatus;
+  paid: boolean;
+  totalPrice: number;
+  items: OrderItem[];
   name: string;
   phone: string;
-  status: string;
-  comment?: string | null;
-  items: OrderItem[];
-  totalPrice: number;
-  paid: boolean;
+  address: string | null;
+  deliveryType: "PICKUP" | "DELIVERY" | null;
+  comment: string | null;
+  createdAt: string;
 };
 
 type CustomOrder = {
+  type: "custom";
   orderNumber: number;
+  status: OrderStatus;
   name: string;
   phone: string;
-  status: string;
-  comment?: string | null;
-  eventType: string;
-  weight?: number | null;
-  customImage?: string | null;
-  ingredients: Ingredient[];
+  eventType: string | null;
+  weight: number | null;
+  comment: string | null;
+  customImage: string | null;
+  createdAt: string;
+  ingredients: {
+    id: number;
+    name: string;
+  }[];
 };
 
-type Order = StandardOrder | CustomOrder;
-
-interface PageProps {
-  params: Promise<{
-    type: string;
-    orderNumber: string;
-  }>;
-}
-
 export default function OrderPage({ params }: PageProps) {
-  const { type, orderNumber } = use(params);
+  // ✅ Розпаковуємо проміс від Next.js
+  const { orderNumber } = use(params);
 
-  const [order, setOrder] = useState<Order | null>(null);
+  const [order, setOrder] = useState<NormalOrder | CustomOrder | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!orderNumber || !type) return;
+    if (!orderNumber) return;
 
     const fetchOrder = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/${type}/${parseInt(orderNumber)}`);
+        const res = await fetch(`/api/orders/${orderNumber}`);
         if (!res.ok) {
-          console.error("Order not found", await res.text());
           setOrder(null);
-          setLoading(false);
           return;
         }
         const data = await res.json();
         setOrder(data);
       } catch (err) {
-        console.error(err); 
+        console.error("Помилка завантаження замовлення:", err);
         setOrder(null);
       } finally {
         setLoading(false);
@@ -82,110 +78,101 @@ export default function OrderPage({ params }: PageProps) {
     };
 
     fetchOrder();
-  }, [type, orderNumber]);
+  }, [orderNumber]);
 
-  if (loading) return <p className="p-6">Loading...</p>;
-  if (!order) return <p className="p-6">Order not found</p>;
+  if (loading) {
+    return <p className="p-6">Завантаження...</p>;
+  }
+
+  if (!order) {
+    return <p className="p-6">Замовлення не знайдено</p>;
+  }
 
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-6">
-      {type === "orders"
-        ? renderStandardOrder(order as StandardOrder)
-        : renderCustomOrder(order as CustomOrder)}
-    </div>
-  );
-}
+      <h1 className="text-2xl font-bold">
+        {order.type === "regular"
+          ? `Звичайне замовлення №${order.orderNumber}`
+          : `Кастомне замовлення №${order.orderNumber}`}
+      </h1>
 
-/* ---------- Рендер стандартного замовлення ---------- */
-function renderStandardOrder(order: StandardOrder) {
-  return (
-    <>
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Замовлення #{order.orderNumber}</h1>
-        <span
-          className={`px-3 py-1 rounded-full text-sm font-medium ${
-            order.status === "NEW"
-              ? "bg-yellow-100 text-yellow-800"
-              : order.status === "PAID"
-              ? "bg-green-100 text-green-800"
-              : "bg-gray-100 text-gray-800"
-          }`}
-        >
-          {order.status}
-        </span>
+      <div className="space-y-2">
+        <p><span className="font-semibold">Статус:</span> {order.status}</p>
+        {"paid" in order && (
+          <p><span className="font-semibold">Оплачено:</span> {order.paid ? "Так" : "Ні"}</p>
+        )}
+        {"totalPrice" in order && (
+          <p><span className="font-semibold">Сума:</span> {order.totalPrice} ₴</p>
+        )}
+        <p><span className="font-semibold">Ім’я:</span> {order.name}</p>
+        <p><span className="font-semibold">Телефон:</span> {order.phone}</p>
+        {"address" in order && (
+          <p><span className="font-semibold">Адреса:</span> {order.address || "—"}</p>
+        )}
+        {"deliveryType" in order && (
+          <p><span className="font-semibold">Доставка:</span> {order.deliveryType || "—"}</p>
+        )}
+        {"eventType" in order && (
+          <p><span className="font-semibold">Подія:</span> {order.eventType || "—"}</p>
+        )}
+        {"weight" in order && (
+          <p><span className="font-semibold">Вага:</span> {order.weight ? `${order.weight} кг` : "—"}</p>
+        )}
+        <p><span className="font-semibold">Коментар:</span> {order.comment || "—"}</p>
+        <p><span className="font-semibold">Створено:</span> {new Date(order.createdAt).toLocaleString()}</p>
       </div>
 
-      <div className="bg-white shadow rounded-xl p-4 space-y-2">
-        <p><span className="font-medium">Ім’я: </span>{order.name}</p>
-        <p><span className="font-medium">Телефон: </span>{order.phone}</p>
-        {order.comment && <p><span className="font-medium">Коментар: </span>{order.comment}</p>}
-      </div>
-
-      <div className="bg-white shadow rounded-xl p-4">
-        <h2 className="text-lg font-semibold mb-3">Товари</h2>
-        <ul className="divide-y divide-gray-200">
+      {"items" in order && order.items.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold">Товари</h2>
           {order.items.map((item, index) => (
-            <li key={index} className="py-2 flex justify-between">
-              <span>{item.name}</span>
-              <span className="font-medium">{item.price} грн</span>
-            </li>
+            <div
+              key={index}
+              className="flex items-center gap-4 border p-3 rounded-lg shadow-sm"
+            >
+              {item.imageUrl && (
+                <Image
+                  src={item.imageUrl}
+                  alt={item.name}
+                  width={80}
+                  height={80}
+                  className="rounded"
+                />
+              )}
+              <div>
+                <p className="font-medium">{item.name}</p>
+                <p className="text-sm text-gray-600">
+                  Кількість: {item.quantity} × {item.price} ₴
+                </p>
+              </div>
+            </div>
           ))}
-        </ul>
-        <div className="flex justify-between mt-4 pt-2 border-t">
-          <span className="font-semibold">Всього:</span>
-          <span className="font-bold text-lg">{order.totalPrice} грн</span>
         </div>
-      </div>
-    </>
-  );
-}
-
-/* ---------- Рендер кастомного замовлення ---------- */
-function renderCustomOrder(order: CustomOrder) {
-  return (
-    <>
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Кастомне замовлення #{order.orderNumber}</h1>
-        <span
-          className={`px-3 py-1 rounded-full text-sm font-medium ${
-            order.status === "NEW"
-              ? "bg-yellow-100 text-yellow-800"
-              : "bg-gray-100 text-gray-800"
-          }`}
-        >
-          {order.status}
-        </span>
-      </div>
-
-      <div className="bg-white shadow rounded-xl p-4 space-y-2">
-        <p><span className="font-medium">Ім’я: </span>{order.name}</p>
-        <p><span className="font-medium">Телефон: </span>{order.phone}</p>
-        <p><span className="font-medium">Подія: </span>{order.eventType}</p>
-        {order.weight && <p><span className="font-medium">Вага: </span>{order.weight} кг</p>}
-        {order.comment && <p><span className="font-medium">Коментар: </span>{order.comment}</p>}
-      </div>
-
-      {order.customImage && (
-        <Image
-          src={order.customImage}
-          alt="Custom Cake"
-          className="w-64 h-64 object-cover rounded-lg shadow"
-        />
       )}
 
-      {order?.ingredients && order.ingredients.length > 0 && (
-        <div className="bg-white shadow rounded-xl p-4">
-          <h2 className="text-lg font-semibold mb-3">Інгредієнти</h2>
-          <ul className="divide-y divide-gray-200">
-            {order.ingredients.map((ing, index) => (
-              <li key={index} className="py-2 flex justify-between">
-                <span>{ing.ingredient.name}</span>
-                <span className="text-gray-500">{ing.ingredient.type}</span>
-              </li>
+      {"ingredients" in order && order.ingredients.length > 0 && (
+        <div className="space-y-2">
+          <h2 className="text-lg font-semibold">Інгредієнти</h2>
+          <ul className="list-disc list-inside">
+            {order?.ingredients.map((ing, index) => (
+              <li key={`${ing.id}-${index}`}>{ing.name}</li>
             ))}
           </ul>
         </div>
       )}
-    </>
+
+      {"customImage" in order && order.customImage && (
+        <div>
+          <h2 className="text-lg font-semibold">Зображення торта</h2>
+          <Image
+            src={order.customImage}
+            alt="Кастомний торт"
+            width={300}
+            height={300}
+            className="rounded-lg"
+          />
+        </div>
+      )}
+    </div>
   );
 }

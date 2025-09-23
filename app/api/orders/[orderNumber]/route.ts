@@ -1,4 +1,3 @@
-// app/api/orders/route.ts
 import { prisma } from "@/app/lib/prisma";
 
 type OrderStatus = "NEW" | "PROCESSING" | "DELIVERING" | "COMPLETED";
@@ -42,22 +41,12 @@ type CustomOrder = {
   }[];
 };
 
-type CustomIngredient = {
-  ingredient: {
-    id: number;
-    name: string;
-  };
-};
+export async function GET(
+  req: Request,
+  { params }: { params: { orderNumber: string } }
+) {
+  const orderNumber = Number(params.orderNumber);
 
-export async function GET(req: Request) {
-  const url = new URL(req.url);
-  const orderNumberStr = url.searchParams.get("orderNumber");
-
-  if (!orderNumberStr) {
-    return new Response("Номер замовлення не вказаний", { status: 400 });
-  }
-
-  const orderNumber = Number(orderNumberStr);
   if (isNaN(orderNumber)) {
     return new Response("Некоректний номер замовлення", { status: 400 });
   }
@@ -87,9 +76,7 @@ export async function GET(req: Request) {
         type: "regular",
         items: normalOrder.items as OrderItem[],
       };
-      return new Response(JSON.stringify(response), {
-        headers: { "Content-Type": "application/json" },
-      });
+      return Response.json(response);
     }
 
     // 2️⃣ Шукаємо кастомне замовлення
@@ -115,14 +102,17 @@ export async function GET(req: Request) {
     });
 
     if (customOrder) {
-      const ingredients = customOrder.ingredients.map((ing:CustomIngredient) => ({
+      const ingredients = customOrder.ingredients.map((ing) => ({
         id: ing.ingredient.id,
         name: ing.ingredient.name,
       }));
-      const response: CustomOrder = { ...customOrder, type: "custom", ingredients };
-      return new Response(JSON.stringify(response), {
-        headers: { "Content-Type": "application/json" },
-      });
+
+      const response: CustomOrder = {
+        ...customOrder,
+        type: "custom",
+        ingredients,
+      };
+      return Response.json(response);
     }
 
     return new Response("Замовлення не знайдено", { status: 404 });

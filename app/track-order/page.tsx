@@ -169,8 +169,8 @@ export default function TrackOrderPage() {
           <div className="mt-3">
             <strong>Інгредієнти:</strong>
             <ul className="list-disc pl-5">
-              {order.ingredients.map((ing) => (
-                <li key={ing.id}>{ing.name}</li>
+              {order.ingredients.map((ing, index) => (
+                <li key={index}>{ing.name}</li>
               ))}
             </ul>
           </div>
