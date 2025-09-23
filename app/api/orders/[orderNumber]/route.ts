@@ -1,4 +1,6 @@
+// app/api/orders/[orderNumber]/route.ts
 import { prisma } from "@/app/lib/prisma";
+import { NextResponse } from "next/server";
 
 type OrderStatus = "NEW" | "PROCESSING" | "DELIVERING" | "COMPLETED";
 
@@ -21,7 +23,7 @@ type NormalOrder = {
   address: string | null;
   deliveryType: "PICKUP" | "DELIVERY" | null;
   comment: string | null;
-  createdAt: Date;
+  createdAt: string;
 };
 
 type CustomOrder = {
@@ -34,25 +36,33 @@ type CustomOrder = {
   weight: number | null;
   comment: string | null;
   customImage: string | null;
-  createdAt: Date;
+  createdAt: string;
   ingredients: {
     id: number;
     name: string;
   }[];
 };
 
-export async function GET(
-  req: Request,
-  { params }: { params: { orderNumber: string } }
-) {
-  const orderNumber = Number(params.orderNumber);
+type CustomIngredient = {
+  ingredient: {
+    id: number;
+    name: string;
+  };
+};
 
-  if (isNaN(orderNumber)) {
-    return new Response("Некоректний номер замовлення", { status: 400 });
-  }
-
+export async function GET(req: Request) {
   try {
-    // 1️⃣ Шукаємо звичайне замовлення
+    const url = new URL(req.url);
+    // Беремо orderNumber з pathname
+    const pathParts = url.pathname.split("/");
+    const orderNumberStr = pathParts[pathParts.length - 1];
+    const orderNumber = Number(orderNumberStr);
+
+    if (isNaN(orderNumber)) {
+      return NextResponse.json({ message: "Некоректний номер замовлення" }, { status: 400 });
+    }
+
+    // 1️⃣ Звичайне замовлення
     const normalOrder = await prisma.order.findUnique({
       where: { orderNumber },
       select: {
@@ -74,12 +84,13 @@ export async function GET(
       const response: NormalOrder = {
         ...normalOrder,
         type: "regular",
+        createdAt: normalOrder.createdAt.toISOString(),
         items: normalOrder.items as OrderItem[],
       };
-      return Response.json(response);
+      return NextResponse.json(response);
     }
 
-    // 2️⃣ Шукаємо кастомне замовлення
+    // 2️⃣ Кастомне замовлення
     const customOrder = await prisma.customCakeOrder.findUnique({
       where: { orderNumber },
       select: {
@@ -102,23 +113,26 @@ export async function GET(
     });
 
     if (customOrder) {
-      const ingredients = customOrder.ingredients.map((ing) => ({
-        id: ing.ingredient.id,
-        name: ing.ingredient.name,
-      }));
+      const ingredients = customOrder.ingredients.map(
+        (ing: CustomIngredient) => ({
+          id: ing.ingredient.id,
+          name: ing.ingredient.name,
+        })
+      );
 
       const response: CustomOrder = {
         ...customOrder,
         type: "custom",
+        createdAt: customOrder.createdAt.toISOString(),
         ingredients,
       };
-      return Response.json(response);
+      return NextResponse.json(response);
     }
 
-    return new Response("Замовлення не знайдено", { status: 404 });
+    return NextResponse.json({ message: "Замовлення не знайдено" }, { status: 404 });
   } catch (error: unknown) {
-    return new Response(
-      error instanceof Error ? error.message : "Помилка отримання замовлення",
+    return NextResponse.json(
+      { message: error instanceof Error ? error.message : "Помилка отримання замовлення" },
       { status: 500 }
     );
   }
