@@ -30,7 +30,7 @@ export default function CakesList({ cakes }: { cakes: Cake[] }) {
                   NEW
                 </span>
               )}
-              <Image
+              <img
                 src={cake.imageUrl}
                 alt={cake.name}
                 className="w-full h-56 object-cover"

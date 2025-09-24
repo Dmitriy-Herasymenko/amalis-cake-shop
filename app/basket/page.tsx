@@ -43,10 +43,11 @@ const submitOrder = async (payment: string) => {
       payment,
       deliveryType,
       store: deliveryType === "PICKUP" ? selectedStore : null,
-      items: expandedItems, // 👈 тут дублікати!
+      items: expandedItems,
       totalPrice,
     };
 
+    // 🔹 Спочатку створюємо замовлення
     const res = await fetch("/api/orders", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -55,8 +56,45 @@ const submitOrder = async (payment: string) => {
 
     const data = await res.json();
     setOrderNumber(data.orderNumber || "не визначено");
-    setOrderDone(true);
-    clearCart();
+
+    // 🔹 Якщо вибрали PayPass → йдемо в LiqPay
+    if (payment === "paypass") {
+      const payRes = await fetch("/api/pay", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: totalPrice,
+          orderId: data.orderNumber,
+        }),
+      });
+
+      const payData = await payRes.json();
+
+      // 🔹 Створюємо форму та відправляємо у LiqPay
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = "https://www.liqpay.ua/api/3/checkout";
+      form.acceptCharset = "utf-8";
+
+      const inputData = document.createElement("input");
+      inputData.type = "hidden";
+      inputData.name = "data";
+      inputData.value = payData.data;
+      form.appendChild(inputData);
+
+      const inputSignature = document.createElement("input");
+      inputSignature.type = "hidden";
+      inputSignature.name = "signature";
+      inputSignature.value = payData.signature;
+      form.appendChild(inputSignature);
+
+      document.body.appendChild(form);
+      form.submit();
+    } else {
+      // 🔹 Якщо готівка → просто показуємо успіх
+      setOrderDone(true);
+      clearCart();
+    }
   } catch (err) {
     console.error("Error sending order:", err);
     alert("Помилка при оформленні замовлення");
