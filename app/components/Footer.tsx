@@ -27,9 +27,9 @@ export default function Footer() {
                 </div>
 
                 {/* Права частина: інформаційні колонки */}
-                <div className="md:w-2/3 flex justify-between gap-8">
+                <div className="md:w-2/3 flex justify-between gap-8 max-sm:flex-col max-sm:gap-6 max-sm:items-start">
                     {/* Перша права колонка */}
-                    <div className="text-right">
+                    <div className="text-right max-sm:text-left">
                         <h3 className="font-semibold mb-4">Інформація</h3>
                         <ul className="space-y-2">
                             <li><a href="/cakes" className="hover:text-pink-500">Каталог тортів</a></li>
@@ -38,7 +38,7 @@ export default function Footer() {
                         </ul>
                     </div>
 
-                    <div className="text-right">
+                    <div className="text-right max-sm:text-left">
                         <h3 className="font-semibold mb-4">Інформація</h3>
                         <ul className="space-y-2">
                             <li><a href="/cakes" className="hover:text-pink-500">Каталог тортів</a></li>
@@ -48,7 +48,7 @@ export default function Footer() {
                     </div>
 
                     {/* Друга права колонка */}
-                    <div className="text-right">
+                    <div className="text-right max-sm:text-left">
                         <h3 className="font-semibold mb-4">Контакти</h3>
                         <ul className="space-y-2">
                             <li>Телефон: +380 93 817 11 66</li>
@@ -59,9 +59,10 @@ export default function Footer() {
                 </div>
             </div>
 
-            <div className="mt-12 text-center text-gray-300 text-sm">
+            <div className="mt-12 text-center text-gray-300 text-sm max-sm:mt-6 max-sm:text-xs">
                 &copy; 2024 Amalis Cake Shop. All rights reserved.
             </div>
         </footer>
+
     );
 }

@@ -7,10 +7,8 @@ export async function GET() {
     });
     return new Response(JSON.stringify(ingredients), { status: 200 });
   } catch (e: unknown) {
-        if (e instanceof Error) { 
-           return new Response(e.message || "Error fetching ingredients", { status: 500 });
-        }
-
-   
+    if (e instanceof Error) {
+      return new Response(e.message || "Error fetching ingredients", { status: 500 });
+    }
   }
 }

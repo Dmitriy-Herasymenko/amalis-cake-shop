@@ -14,15 +14,14 @@ export default function CakesList({ cakes }: { cakes: Cake[] }) {
   const { addToCart } = useCartStore();
 
   return (
-    <div className="min-h-screen  ">
-
+    <div className="min-h-screen">
       {/* Список тортів */}
       <div className="px-6 md:px-20 py-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-10">
-          {cakes.map((cake:Cake, idx) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-8 md:gap-10">
+          {cakes.map((cake: Cake, idx) => (
             <div
               key={cake.id}
-              className="relative rounded-[12px] shadow-xl overflow-hidden  "
+              className="relative rounded-[12px] shadow-xl overflow-hidden"
             >
               {/* бейдж */}
               {idx % 2 === 0 && (
@@ -61,5 +60,6 @@ export default function CakesList({ cakes }: { cakes: Cake[] }) {
         </div>
       </div>
     </div>
+
   );
 }
