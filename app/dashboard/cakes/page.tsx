@@ -124,7 +124,13 @@ export default function CakesPage() {
           {cakes.map((cake) => (
             <tr key={cake.id} className="bg-white hover:bg-pink-50">
               <td className="border p-1">
-                <Image src={cake.imageUrl} alt={cake.name} className="w-full h-20 object-cover  mx-auto" />
+                <Image 
+                src={cake?.imageUrl} 
+                alt={cake.name} 
+                width={80}      
+                height={80}  
+                className="w-full h-20 object-cover  mx-auto" 
+                />
               </td>
               <td className="border p-2">
                 <input

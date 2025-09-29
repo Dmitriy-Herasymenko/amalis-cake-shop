@@ -24,7 +24,8 @@ export async function POST(req: NextRequest) {
       where: { orderNumber: Number(decoded.order_id) },
       data: { paid: true, payment: "paypass" },
     });
+      console.log("✅ Оплата успішна:", decoded.order_id);
   }
-
+      console.log("✅ Оплата успішна:", decoded.order_id);
   return NextResponse.json({ ok: true });
 }

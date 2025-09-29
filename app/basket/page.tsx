@@ -69,7 +69,6 @@ const submitOrder = async (payment: string) => {
       });
 
       const payData = await payRes.json();
-
       // 🔹 Створюємо форму та відправляємо у LiqPay
       const form = document.createElement("form");
       form.method = "POST";
